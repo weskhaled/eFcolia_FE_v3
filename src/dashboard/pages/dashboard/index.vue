@@ -91,8 +91,8 @@ const markerClicked = (deviceId) => {
       gmapRef.value.mapOptions.center = { lat: device.latitude, lng: device.longitude }
       gmapRef.value.mapOptions.zoom = 18
     }
-    const scrollDiv = document.getElementById(`device-id-${device.id}`)?.offsetTop
-    scrollDiv && devicesListRef.value?.listScrollRef?.scrollTo({ top: scrollDiv - 50, behavior: 'smooth' })
+    const indexOfDevice = devices.value.findIndex(d => d.id === deviceId)
+    devicesListRef.value?.scrollTo(indexOfDevice)
     selectedDevice.value = device
     if (siderCollapsed.value && showDeviceDetails.value)
       showDeviceDetails.value = false
@@ -177,7 +177,7 @@ const deviceClicked = (deviceCard) => {
           }}</span>
           <span v-else class="text-sm leading-15px dark:text-light-400">{{ t('common.devices.notFound') }}</span>
         </h3>
-        <div class="hidden md:flex">
+        <div class="flex">
           <a-button class="flex items-center justify-center flex-grow-0 mr-0" type="primary">
             <template #icon>
               <span class="i-ant-design-reload-outlined anticon block text-white" />

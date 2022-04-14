@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { vInfiniteScroll } from '@vueuse/components'
+import { useVirtualList } from '@vueuse/core'
 import { mdAndLarger, siderCollapsed } from '~/common/stores'
 
 interface Props {
@@ -17,9 +18,18 @@ const emit = defineEmits(['deviceClicked', 'onLoadMore', 'showDetails', 'showHis
 
 const { t } = useI18n()
 
+const filteredList = computed(() => props.devices.filter(i => i.name))
 const listScrollRef = ref<HTMLElement | null>(null)
 
-defineExpose({ listScrollRef })
+const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
+  filteredList,
+  {
+    itemHeight: 160,
+    overscan: 10,
+  },
+)
+
+defineExpose({ listScrollRef, scrollTo })
 </script>
 
 <template>
@@ -40,8 +50,9 @@ defineExpose({ listScrollRef })
   </div>
   <div
     ref="listScrollRef"
-    v-infinite-scroll="[() => emit('onLoadMore'), { 'distance': 10 }]"
-    class="w-full overflow-y-auto overflow-x-hidden max-h-[calc(500px)] md:max-h-[calc(100vh-103px)] md:min-h-[calc(100vh-103px)]"
+    v-infinite-scroll="[() => emit('onLoadMore'), { 'distance': 160 }]"
+    v-bind="containerProps"
+    class="w-full overflow-y-auto overflow-x-hidden h-[calc(50vh-78px)] md:max-h-[calc(100vh-103px)] md:min-h-[calc(100vh-103px)] relative"
   >
     <div
       class="pt-0 px-2 flex -top-0 items-center sticky flex z-44 items-center justify-center font-semibold bg-slate-50/80 backdrop-blur-sm ring-1 ring-slate-900/10 transition-all duration-100"
@@ -52,11 +63,8 @@ defineExpose({ listScrollRef })
       >
         <div v-if="!siderCollapsed" class="flex flex-grow items-center mr-auto">
           <a-input-search
-            :size="mdAndLarger ? 'default' : 'small'"
-            placeholder="input search loading with enterButton"
-            :loading="props.devicesLoading"
-            :disabled="props.devicesCount === 0"
-            enter-button
+            :size="mdAndLarger ? 'default' : 'small'" placeholder="input search loading with enterButton"
+            :loading="props.devicesLoading" :disabled="props.devicesCount === 0" enter-button
             class="flex-grow max-w-full mr-2"
           />
         </div>
@@ -93,47 +101,44 @@ defineExpose({ listScrollRef })
         </div>
       </div>
     </div>
-    <div
-      v-for="item in props.devices"
-      :id="`device-id-${item.id}`"
-      :key="item.id"
-      class="py-1 px-1 flex items-center"
-      :class="siderCollapsed ? 'justify-center' : 'justify-start'"
-    >
-      <template v-if="siderCollapsed">
-        <a-tooltip :color="item.gprsstate === 1 ? 'green' : 'red'" placement="right">
-          <template #title>
-            <span>{{ `${item.name}` }}</span>
-          </template>
+    <div v-bind="wrapperProps">
+      <div
+        v-for="{ index, data: item } in list" :id="`device-id-${item.id}`" :key="index"
+        class="py-1 px-1 flex items-center" :class="siderCollapsed ? 'justify-center' : 'justify-start'"
+      >
+        <template v-if="siderCollapsed">
+          <a-tooltip :color="item.gprsstate === 1 ? 'green' : 'red'" placement="right">
+            <template #title>
+              <span>{{ `${item.name}` }}</span>
+            </template>
 
-          <div
-            class="block group flex items-center justify-center transition-all cursor-pointer ease-in duration-100 h-12 w-full rounded-sm text-dark-800 relative"
-            :class="item.selected ? 'bg-gray-400 hover:bg-gray-500' : 'bg-gray-100 hover:bg-gray-200'"
-            @click="emit('deviceClicked', item)"
-          >
-            <span
-              v-if="item.selected"
-              class="i-ant-design-caret-left-filled text-sm absolute -right-1.3 top-4 block ease-in duration-100 transition-all text-white"
-            />
-            <a-badge
-              :text="false"
-              :status="item.gprsstate === 1 ? 'success' : 'error'"
-              class="absolute -top-2.5 -right-0 w-1 h-1"
-            />
-            <span
-              class="inline-block text-xs uppercase"
-            >{{ `${item.name}`.slice(0, 6) }}{{ `${item.name}`.length > 6 ? '...' : null }}</span>
-          </div>
-        </a-tooltip>
-      </template>
-      <template v-else>
-        <DeviceCard
-          :device="item"
-          @click="emit('deviceClicked', item)"
-          @show-details="emit('showDetails', item)"
-          @show-history="emit('showHistory', item)"
-        />
-      </template>
+            <div
+              class="block group flex items-center justify-center transition-all cursor-pointer ease-in duration-100 h-160px w-full rounded-sm text-dark-800 relative"
+              :class="item.selected ? 'bg-gray-400 hover:bg-gray-500' : 'bg-gray-100 hover:bg-gray-200'"
+              @click="emit('deviceClicked', item)"
+            >
+              <span
+                v-if="item.selected"
+                class="i-ant-design-caret-left-filled text-sm absolute -right-1.3 top-4 block ease-in duration-100 transition-all text-white"
+              />
+              <a-badge
+                :text="false" :status="item.gprsstate === 1 ? 'success' : 'error'"
+                class="absolute -top-2.5 -right-0 w-1 h-1"
+              />
+              <span class="inline-block text-xs uppercase">{{ `${item.name}`.slice(0, 6) }}{{
+                `${item.name}`.length > 6
+                  ? '...' : null
+              }}</span>
+            </div>
+          </a-tooltip>
+        </template>
+        <template v-else>
+          <DeviceCard
+            :device="item" @click="emit('deviceClicked', item)" @show-details="emit('showDetails', item)"
+            @show-history="emit('showHistory', item)"
+          />
+        </template>
+      </div>
     </div>
   </div>
 </template>

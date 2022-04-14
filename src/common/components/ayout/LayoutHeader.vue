@@ -16,7 +16,7 @@ const { t, availableLocales, locale } = useI18n()
           by MatiaSat
         </template>
         <span
-          class="bg-blue-900 text-light-50 rounded-sm py-2 px-4 font-mono font-bold inline-block flex items-center text-xl leading-5"
+          class="bg-blue-900 text-light-50 rounded-sm py-2 px-4 font-mono font-bold inline-block flex items-center text-1rem leading-6"
         >
           efcolia
         </span>

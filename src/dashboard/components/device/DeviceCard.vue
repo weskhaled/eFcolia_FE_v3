@@ -17,10 +17,7 @@ const { t } = useI18n()
 
 <template>
   <a-card
-    v-if="props.device"
-    :bordered="true"
-    size="small"
-    class="w-full"
+    v-if="props.device" :bordered="true" size="small" class="w-full"
     :class="[props.device.selected && 'shadow-sm', props.device.selected && 'bg-blue-200/45']"
     :body-style="{ padding: 0 }"
   >
@@ -32,10 +29,7 @@ const { t } = useI18n()
             v-if="props.device.battery2state === 1"
             class="i-ph-plugs-connected-duotone text-base text-green-600 block ant-icon mx-auto my-1"
           />
-          <span
-            v-else
-            class="i-ph-plugs-duotone text-base text-red-600 block ant-icon mx-auto my-1"
-          />
+          <span v-else class="i-ph-plugs-duotone text-base text-red-600 block ant-icon mx-auto my-1" />
         </a-tooltip>
       </span>
       <span key="connected" class="h-full">
@@ -46,12 +40,10 @@ const { t } = useI18n()
           </template>
           <span class="flex items-center h-27px">
             <span
-              class="battery"
-              :class="[
+              class="battery" :class="[
                 (props.device.batterylevel * 100) / 7 < 10 && 'low',
                 !props.device.batteryvoltage && 'inactive',
-              ]"
-              :style="{
+              ]" :style="{
                 '--battery-level': `${(props.device.batterylevel * 100) / 7}%`,
               }"
             />
@@ -92,7 +84,10 @@ const { t } = useI18n()
             <span class="mx-auto">
               <span v-if="!props.device.csq" class="i-ph-wifi-x-thin block text-red-500 text-lg" />
               <span v-else-if="props.device.csq < 11" class="i-ph-wifi-low-thin block text-green-600 text-lg" />
-              <span v-else-if="props.device.csq > 11 && props.device.csq < 31" class="i-ph-wifi-medium-thin block text-green-600 text-lg" />
+              <span
+                v-else-if="props.device.csq > 11 && props.device.csq < 31"
+                class="i-ph-wifi-medium-thin block text-green-600 text-lg"
+              />
               <span v-else class="i-ph-wifi-high-thin block text-green-600 text-lg" />
             </span>
           </span>
@@ -104,8 +99,7 @@ const { t } = useI18n()
           <span class="flex items-center h-27px text-xs">
             <span class="mx-auto">
               <span
-                key="ellipsis"
-                class="i-ph-cell-signal-high-duotone text-sm inline-block ant-icon mx-auto mt-1"
+                key="ellipsis" class="i-ph-cell-signal-high-duotone text-sm inline-block ant-icon mx-auto mt-1"
                 :class="props.device.validitycode ? 'text-green-500' : 'text-red-500'"
               />
               <span v-if="props.device.satsinuse !== null">X{{ props.device.satsinuse }}</span>
@@ -115,9 +109,7 @@ const { t } = useI18n()
       </span>
       <span key="settings" class="h-full">
         <a-dropdown>
-          <a-button
-            class="flex items-center justify-center mx-auto" type="text"
-          >
+          <a-button class="flex items-center justify-center mx-auto" type="text">
             <template #icon>
               <span class="i-ant-design-ellipsis-outlined anticon block text-md" />
             </template>
@@ -163,10 +155,20 @@ const { t } = useI18n()
     <div class="cursor-pointer" @click="emit('click')">
       <div class="p-1.5">
         <div class="flex justify-between items-center mb-1">
-          <h2 class="text-dark-800 text-18px mb-0">
-            {{ props.device.name }}
-          </h2>
-          <span class="text-xs text-right">{{ props.device.localizationdate && dayjs(props.device.localizationdate).format('DD/MM/YYYY HH:mm:ss') }}</span>
+          <a-tooltip>
+            <template #title>
+              <span>{{ props.device?.name }}</span>
+            </template>
+            <h2 class="text-lg mb-0 dark:text-light-400">
+              {{ `${props.device?.name}`.slice(0, 20) }}{{
+                `${props.device?.name}`.length > 20 ? '...' : null
+              }}
+            </h2>
+          </a-tooltip>
+          <span class="text-xs text-right">{{
+            props.device.localizationdate &&
+              dayjs(props.device.localizationdate).format('DD/MM/YYYY HH:mm:ss')
+          }}</span>
         </div>
         <div class="flex items-center text-dark-50 mb-0.5 text-xs">
           <span class="i-ph-map-pin-duotone block mb-1 mr-0.5" />
@@ -175,9 +177,7 @@ const { t } = useI18n()
       </div>
       <div class="hidden md:block bg-gray-200/10 shadow-inner p-1.5">
         <div class="flex text-xs">
-          <div
-            class="flex items-center flex-0 mr-0.5"
-          >
+          <div class="flex items-center flex-0 mr-0.5">
             <span class="i-ph-info-duotone block text-xs mb-0.5 mr-0.5" />
           </div>
           <div class="flex text-left flex-grow items-center">
@@ -185,7 +185,8 @@ const { t } = useI18n()
               <span v-if="props.device.description">{{ props.device.description }}</span>
               <div class="flex-grow mr-auto">
                 <span>
-                  {{ props.device.serialnumber
+                  {{
+                    props.device.serialnumber
                   }}{{ props.device.simcardNumber && ' | +' + props.device.simcardNumber }}
                 </span>
               </div>
@@ -207,10 +208,12 @@ const { t } = useI18n()
 <style lang="less">
 .ant-card-actions {
   @apply bg-white/50;
-  > li {
-    @apply !my-1;
+
+  >li {
+    @apply  !my-1;
   }
 }
+
 .battery {
   display: block;
   position: relative;
@@ -221,6 +224,7 @@ const { t } = useI18n()
   height: calc(9px);
   border-radius: 1px;
   box-shadow: 0px 0px 0px 1px currentColor;
+
   &:before {
     content: "";
     width: var(--battery-level);
@@ -231,6 +235,7 @@ const { t } = useI18n()
     position: absolute;
     border-radius: 0;
   }
+
   &:after {
     content: "";
     position: absolute;
@@ -243,9 +248,11 @@ const { t } = useI18n()
     border-bottom-right-radius: calc(5px);
     border-top-right-radius: calc(5px);
   }
+
   &.low {
     color: rgb(255, 38, 0);
   }
+
   &.inactive {
     color: #969696;
   }
@@ -259,11 +266,14 @@ const { t } = useI18n()
   overflow: hidden;
   transform: rotate(45deg) scale(1);
   color: #6e6e6e;
-  > div {
+
+  >div {
     color: #6e6e6e;
+
     &.active {
       color: #48bb78;
     }
+
     &:nth-child(1) {
       border-radius: 50%;
       border: 1px solid currentColor;
@@ -271,6 +281,7 @@ const { t } = useI18n()
       width: 200%;
       height: 200%;
     }
+
     &:nth-child(2) {
       border-radius: 50%;
       border: 1px solid currentColor;
@@ -281,6 +292,7 @@ const { t } = useI18n()
       width: 150%;
       height: 150%;
     }
+
     &:nth-child(3) {
       border-radius: 50%;
       border: 1px solid currentColor;
@@ -290,6 +302,7 @@ const { t } = useI18n()
       transform: translate(50%, 50%);
       height: 100%;
     }
+
     &:nth-child(4) {
       border-radius: 50%;
       border: 1px solid currentColor;
@@ -300,6 +313,7 @@ const { t } = useI18n()
       right: 0%;
       width: 50%;
       transform: translate(50%, 50%);
+
       &.active {
         background-color: #48bb78;
       }
