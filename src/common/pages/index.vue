@@ -6,6 +6,7 @@ import { GoogleMap, Marker } from 'vue3-google-map'
 // import { map, marker, tileLayer } from 'leaflet'
 import { useUserStore } from '../../hi/stores/user'
 
+onMounted(() => router.push('/auth'))
 const user = useUserStore()
 const name = ref(user.savedName)
 const testRef: any = ref()
