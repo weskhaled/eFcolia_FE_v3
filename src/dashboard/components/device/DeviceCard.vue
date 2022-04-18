@@ -175,7 +175,7 @@ const { t } = useI18n()
           {{ props.device.adress || 'Pas d\'adresse pour ce device' }}
         </div>
       </div>
-      <div class="hidden md:block bg-gray-200/10 shadow-inner p-1.5">
+      <div class="bg-gray-200/10 shadow-inner p-1.5">
         <div class="flex text-xs">
           <div class="flex items-center flex-0 mr-0.5">
             <span class="i-ph-info-duotone block text-xs mb-0.5 mr-0.5" />

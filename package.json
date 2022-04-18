@@ -22,6 +22,7 @@
     "ant-design-vue": "^3.1.1",
     "axios": "^0.26.1",
     "dayjs": "^1.11.0",
+    "fusioncharts": "^3.18.0",
     "leaflet": "^1.7.1",
     "nprogress": "^0.2.0",
     "pinia": "^2.0.13",
@@ -30,7 +31,8 @@
     "vue-demi": "^0.12.5",
     "vue-i18n": "^9.1.9",
     "vue-router": "^4.0.14",
-    "vue3-google-map": "^0.10.0"
+    "vue3-google-map": "^0.10.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.20.2",

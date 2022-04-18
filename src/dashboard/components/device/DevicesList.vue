@@ -52,7 +52,7 @@ defineExpose({ listScrollRef, scrollTo })
     ref="listScrollRef"
     v-infinite-scroll="[() => emit('onLoadMore'), { 'distance': 160 }]"
     v-bind="containerProps"
-    class="w-full overflow-y-auto overflow-x-hidden h-[calc(50vh-78px)] md:max-h-[calc(100vh-103px)] md:min-h-[calc(100vh-103px)] relative"
+    class="w-full overflow-y-auto overflow-x-hidden min-h-500px h-[calc(50vh-78px)] md:max-h-[calc(100vh-103px)] md:min-h-[calc(100vh-103px)] relative"
   >
     <div
       class="pt-0 px-2 flex -top-0 items-center sticky flex z-44 items-center justify-center font-semibold bg-slate-50/80 backdrop-blur-sm ring-1 ring-slate-900/10 transition-all duration-100"
@@ -63,7 +63,7 @@ defineExpose({ listScrollRef, scrollTo })
       >
         <div v-if="!siderCollapsed" class="flex flex-grow items-center mr-auto">
           <a-input-search
-            :size="mdAndLarger ? 'default' : 'small'" placeholder="input search loading with enterButton"
+            placeholder="input search loading with enterButton"
             :loading="props.devicesLoading" :disabled="props.devicesCount === 0" enter-button
             class="flex-grow max-w-full mr-2"
           />

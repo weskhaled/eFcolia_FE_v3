@@ -24,7 +24,7 @@ watch(
     <LayoutHeader />
     <a-layout class="!min-h-[calc(100vh-55px)] relative">
       <LayoutSider class="absolute top-0 md:block md:relative" />
-      <a-layout class="relative !flex-col-reverse !md:flex-row !min-h-full !w-auto p-0">
+      <a-layout>
         <router-view />
       </a-layout>
     </a-layout>

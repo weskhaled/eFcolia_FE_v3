@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import { exportFile } from '../../utils/export'
 
 interface Props {
-  device?: Ref<any>
   dataHistories?: Ref<any>
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  device: () => ref(null),
   dataHistories: () => ref(null),
 })
 const emit = defineEmits(['click', 'showDetails', 'showHistory'])
-
 const { t } = useI18n()
 
 const wrapperTableHistoryRef = ref(null)
@@ -22,7 +20,7 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
   {
     isHidden: false,
     title: 'Date serveur',
-    width: 120,
+    width: 190,
     dataIndex: 'appdate',
     key: 'appdate',
     fixed: 'left',
@@ -100,28 +98,28 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
   {
     isHidden: false,
     title: 'Temp 1',
-    width: 190,
+    width: 100,
     dataIndex: 'temperature1',
     key: 'temperature1',
   },
   {
     isHidden: false,
     title: 'Temp 2',
-    width: 190,
+    width: 100,
     dataIndex: 'temperature2',
     key: 'temperature2',
   },
   {
     isHidden: false,
     title: 'Temp 3',
-    width: 190,
+    width: 100,
     dataIndex: 'temperature3',
     key: 'temperature3',
   },
   {
     isHidden: false,
     title: 'Niveau GSM',
-    width: 130,
+    width: 100,
     dataIndex: 'csq',
     key: 'csq',
   },
@@ -164,13 +162,9 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
     title: 'Actions',
     key: 'operation',
     fixed: 'right',
-    width: 50,
+    width: 130,
   },
 ])
-const handleMenuClick = (params) => {
-  console.log(params)
-}
-// defineExpose({ map, api, mapOptions, centerMapView })
 </script>
 
 <template>
@@ -185,24 +179,45 @@ const handleMenuClick = (params) => {
     >
       <template #headerCell="{ column }">
         <template v-if="column.key === 'operation'">
-          <a-dropdown v-model:visible="visibleDropdownColumnsDeviceHistories">
+          <a-dropdown-button v-model:visible="visibleDropdownColumnsDeviceHistories" size="small">
             <template #overlay>
               <a-menu class="max-h-45 overflow-scroll" @click="() => false">
+                <a-sub-menu key="sub1">
+                  <template #title>
+                    <span class="inline-block">
+                      <span class="flex items-center">
+                        <span class="i-ph-table-light anticon text-sm mr-2" />
+                        Selected columns
+                      </span>
+                    </span>
+                  </template>
+                  <div class="max-h-45 min-w-200px overflow-scroll">
+                    <a-menu-item
+                      v-for="columnsDevice in columnsDeviceHistories.filter(col => !(['operation', 'appdate'].includes(col.key)))"
+                      :key="columnsDevice.key" @click="() => columnsDevice.isHidden = !columnsDevice.isHidden"
+                    >
+                      <a-checkbox :checked="!columnsDevice.isHidden">
+                        {{ columnsDevice.title }}
+                      </a-checkbox>
+                    </a-menu-item>
+                  </div>
+                </a-sub-menu>
                 <a-menu-item
-                  v-for="columnsDevice in columnsDeviceHistories.filter(col => !(['operation', 'appdate'].includes(col.key)))"
-                  :key="columnsDevice.key" @click="() => columnsDevice.isHidden = !columnsDevice.isHidden"
+                  key="2"
+                  :disabled="!props.dataHistories?.length"
+                  @click="exportFile(props.dataHistories, columnsDeviceHistories)"
                 >
-                  <span class="flex">
-                    <a-checkbox :checked="!columnsDevice.isHidden">{{ columnsDevice.title }} </a-checkbox>
+                  <span class="flex items-center">
+                    <span class="i-ph-file-xls-light anticon text-sm block mr-2" /> Export
                   </span>
                 </a-menu-item>
               </a-menu>
             </template>
-            <a-button type="text" size="small" class="flex items-center text-blue-600">
-              {{ column.title }}
-              <span class="i-ph-caret-down-light anticon text-xs block text-blue" />
-            </a-button>
-          </a-dropdown>
+            {{ column.title }}
+            <template #icon>
+              <span class="i-ant-design-down-outlined anticon !text-10px block text-blue" />
+            </template>
+          </a-dropdown-button>
         </template>
       </template>
       <template #bodyCell="{ column }">
