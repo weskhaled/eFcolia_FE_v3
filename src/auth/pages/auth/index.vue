@@ -102,10 +102,6 @@ const disabled = computed(() => {
                   <a-button :loading="loginLoading" size="large" block :disabled="disabled" type="primary" html-type="submit" class="">
                     Log in
                   </a-button>
-                  <span class="mt-2 inline-block">
-                    Or
-                    <a class="" href="">register now!</a>
-                  </span>
                 </a-form-item>
               </a-form>
             </div>

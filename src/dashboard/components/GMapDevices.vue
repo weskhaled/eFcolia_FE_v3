@@ -120,7 +120,7 @@ const addDrawingManager = () => {
     drawingMode: api.value.drawing.OverlayType.MARKER,
     drawingControl: true,
     drawingControlOptions: {
-      position: api.value.ControlPosition.TOP_CENTER,
+      position: api.value.ControlPosition.LEFT_CENTER,
       drawingModes: [
         api.value.drawing.OverlayType.MARKER,
         api.value.drawing.OverlayType.CIRCLE,
@@ -130,7 +130,7 @@ const addDrawingManager = () => {
       ],
     },
     markerOptions: {
-      icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
+      icon: 'https://api.iconify.design/carbon:flag-filled.svg?width=25px&height=25px&color=%23$aaaa00',
     },
     circleOptions: {
       fillColor: '#ffff00',

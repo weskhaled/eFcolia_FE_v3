@@ -31,6 +31,12 @@ const rulesRef = reactive({
       message: 'Please input name',
     },
   ],
+  clientId: [
+    {
+      required: true,
+      message: 'Please Select A Client',
+    },
+  ],
 })
 const { resetFields, validate, validateInfos } = useForm(modelRef, rulesRef)
 const onSubmit = () => {
@@ -70,7 +76,7 @@ watch(() => props.device, () => {
         <a-form-item label="Name" v-bind="validateInfos.name">
           <a-input v-model:value="modelRef.name" />
         </a-form-item>
-        <a-form-item label="Client" v-bind="validateInfos.region">
+        <a-form-item label="Client" v-bind="validateInfos.client">
           <a-tree-select
             v-model:value="modelRef.clientId" show-search class="w-full md:min-w-70"
             tree-node-filter-prop="title" :tree-default-expanded-keys="[1]"
