@@ -8,7 +8,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   device: () => ref(null),
 })
-const emit = defineEmits(['click', 'showDetails', 'showHistory'])
+const emit = defineEmits(['click', 'showDetails', 'showHistory', 'showStatistics', 'update'])
 
 const { t } = useI18n()
 
@@ -17,9 +17,10 @@ const { t } = useI18n()
 
 <template>
   <a-card
-    v-if="props.device" :bordered="true" size="small" class="w-full"
-    :class="[props.device.selected && 'shadow-sm', props.device.selected && 'bg-blue-200/45']"
+    v-if="props.device" :bordered="true" size="small"
+    :class="[props.device.selected && 'shadow-sm', props.device.selected && 'bg-blue-200/45 dark:bg-dark-900/60']"
     :body-style="{ padding: 0 }"
+    class="w-full dark:bg-blue-gray-700/90 dark:border-blue-gray-900"
   >
     <template #actions>
       <span key="connected">
@@ -70,7 +71,7 @@ const { t } = useI18n()
       <span key="speed" class="h-full">
         <a-tooltip>
           <template #title>Vitesse</template>
-          <span class="flex items-center h-27px text-xs">
+          <span class="flex items-center h-27px text-xs dark:text-light">
             <span class="mx-auto">{{ device.speed }} km/h</span>
           </span>
         </a-tooltip>
@@ -97,7 +98,7 @@ const { t } = useI18n()
         <a-tooltip>
           <template #title>GPS</template>
           <span class="flex items-center h-27px text-xs">
-            <span class="mx-auto">
+            <span class="mx-auto dark:text-light">
               <span
                 key="ellipsis" class="i-ph-cell-signal-high-duotone text-sm inline-block ant-icon mx-auto mt-1"
                 :class="props.device.validitycode ? 'text-green-500' : 'text-red-500'"
@@ -109,9 +110,9 @@ const { t } = useI18n()
       </span>
       <span key="settings" class="h-full">
         <a-dropdown>
-          <a-button class="flex items-center justify-center mx-auto" type="text">
+          <a-button size="small" class="flex items-center justify-center mx-auto" type="text">
             <template #icon>
-              <span class="i-ant-design-ellipsis-outlined anticon block text-md" />
+              <span class="i-ant-design-ellipsis-outlined anticon block text-sm dark:text-light-50" />
             </template>
           </a-button>
           <template #overlay>
@@ -128,7 +129,13 @@ const { t } = useI18n()
                   <span>Historique</span>
                 </span>
               </a-menu-item>
-              <a-menu-item>
+              <a-menu-item @click="() => emit('showStatistics')">
+                <span class="flex items-center leading-6">
+                  <span class="i-ph-activity anticon text-green-600 mr-1" />
+                  <span>Statistics device</span>
+                </span>
+              </a-menu-item>
+              <a-menu-item @click="() => emit('update')">
                 <span class="flex items-center leading-6">
                   <span class="i-ph-pencil-thin anticon text-blue-600 mr-1" />
                   <span>Modifier device</span>
@@ -138,12 +145,6 @@ const { t } = useI18n()
                 <span class="flex items-center leading-6">
                   <span class="i-ph-x-duotone anticon text-red-600 mr-1" />
                   <span>Supprimer device</span>
-                </span>
-              </a-menu-item>
-              <a-menu-item>
-                <span class="flex items-center leading-6">
-                  <span class="i-ph-activity anticon text-yellow-600 mr-1" />
-                  <span>Rapport device</span>
                 </span>
               </a-menu-item>
             </a-menu>
@@ -165,17 +166,17 @@ const { t } = useI18n()
               }}
             </h2>
           </a-tooltip>
-          <span class="text-xs text-right">{{
+          <span class="text-xs text-right dark:text-light-400">{{
             props.device.localizationdate &&
               dayjs(props.device.localizationdate).format('DD/MM/YYYY HH:mm:ss')
           }}</span>
         </div>
-        <div class="flex items-center text-dark-50 mb-0.5 text-xs">
+        <div class="flex items-center text-dark-50 dark:text-light-400 mb-0.5 text-xs">
           <span class="i-ph-map-pin-duotone block mb-1 mr-0.5" />
           {{ props.device.adress || 'Pas d\'adresse pour ce device' }}
         </div>
       </div>
-      <div class="bg-gray-200/10 shadow-inner p-1.5">
+      <div class="bg-gray-200/10 dark:text-light-400 shadow-inner p-1.5">
         <div class="flex text-xs">
           <div class="flex items-center flex-0 mr-0.5">
             <span class="i-ph-info-duotone block text-xs mb-0.5 mr-0.5" />
@@ -207,10 +208,14 @@ const { t } = useI18n()
 </template>
 <style lang="less">
 .ant-card-actions {
-  @apply bg-white/50;
+  @apply bg-white/50 dark:bg-black/30 dark:border-t-dark-500;
 
   >li {
-    @apply  !my-1;
+    @apply  !my-1.5;
+    &:not(:last-child) {
+      // border-right: 1px solid #f0f0f0;
+      @apply border-r-light-500 .dark:border-r-dark-500;
+    }
   }
 }
 

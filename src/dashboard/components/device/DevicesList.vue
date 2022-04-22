@@ -14,22 +14,21 @@ const props = withDefaults(defineProps<Props>(), {
   devicesCount: () => ref(0),
   devicesLoading: () => ref(false),
 })
-const emit = defineEmits(['deviceClicked', 'onLoadMore', 'showDetails', 'showHistory'])
+const emit = defineEmits(['deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'addNewDevice', 'updateDevice'])
 
 const { t } = useI18n()
 
 const filteredList = computed(() => props.devices.filter(i => i.name))
-const listScrollRef = ref<HTMLElement | null>(null)
 
 const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
   filteredList,
   {
-    itemHeight: 160,
+    itemHeight: 159,
     overscan: 10,
   },
 )
 
-defineExpose({ listScrollRef, scrollTo })
+defineExpose({ scrollTo, containerProps })
 </script>
 
 <template>
@@ -37,7 +36,7 @@ defineExpose({ listScrollRef, scrollTo })
     v-if="props.devicesLoading"
     class="w-full h-full bg-dark-500/10 z-44 items-center justify-center absolute top-0 left-0 pointer-events-auto flex"
   >
-    <span class="i-ant-design-loading-outlined text-blue-800 text-2xl anticon-spin" />
+    <span class="i-ant-design-loading-outlined text-blue-800 dark:text-blue-200 text-2xl anticon-spin" />
   </div>
   <div
     v-else-if="!props.devicesLoading && !props.devicesCount"
@@ -49,13 +48,12 @@ defineExpose({ listScrollRef, scrollTo })
     </div>
   </div>
   <div
-    ref="listScrollRef"
     v-infinite-scroll="[() => emit('onLoadMore'), { 'distance': 160 }]"
     v-bind="containerProps"
     class="w-full overflow-y-auto overflow-x-hidden min-h-500px h-[calc(50vh-78px)] md:max-h-[calc(100vh-103px)] md:min-h-[calc(100vh-103px)] relative"
   >
     <div
-      class="pt-0 px-2 flex -top-0 items-center sticky flex z-44 items-center justify-center font-semibold bg-slate-50/80 backdrop-blur-sm ring-1 ring-slate-900/10 transition-all duration-100"
+      class="pt-0 px-2 flex -top-0 items-center sticky flex z-44 items-center justify-center font-semibold bg-slate-50/80 dark:bg-blue-gray-900/80 backdrop-blur-sm ring-1 ring-slate-900/10 transition-all duration-100"
     >
       <div
         class="flex items-center"
@@ -77,7 +75,7 @@ defineExpose({ listScrollRef, scrollTo })
             </a-button>
             <template #overlay>
               <a-menu>
-                <a-menu-item>
+                <a-menu-item @click.prevent="emit('addNewDevice')">
                   <span class="flex items-center leading-6">
                     <span class="i-ph-plus-circle-duotone anticon text-gray-700 mr-1" />
                     <span>Add New Device</span>
@@ -85,8 +83,8 @@ defineExpose({ listScrollRef, scrollTo })
                 </a-menu-item>
                 <a-menu-item>
                   <span class="flex items-center leading-6">
-                    <span class="i-ph-plus-circle-duotone anticon text-gray-700 mr-1" />
-                    <span>Add New Device</span>
+                    <span class="i-carbon-filter-edit anticon text-gray-700 mr-1" />
+                    <span>Edit filter</span>
                   </span>
                 </a-menu-item>
                 <a-menu-item>
@@ -113,7 +111,7 @@ defineExpose({ listScrollRef, scrollTo })
             </template>
 
             <div
-              class="block group flex items-center justify-center transition-all cursor-pointer ease-in duration-100 h-160px w-full rounded-sm text-dark-800 relative"
+              class="block group flex items-center justify-center transition-all cursor-pointer ease-in duration-100 h-151px w-full rounded-sm text-dark-800 relative"
               :class="item.selected ? 'bg-gray-400 hover:bg-gray-500' : 'bg-gray-100 hover:bg-gray-200'"
               @click="emit('deviceClicked', item)"
             >
@@ -134,8 +132,11 @@ defineExpose({ listScrollRef, scrollTo })
         </template>
         <template v-else>
           <DeviceCard
-            :device="item" @click="emit('deviceClicked', item)" @show-details="emit('showDetails', item)"
+            :device="item"
+            @click="emit('deviceClicked', item)"
+            @show-details="emit('showDetails', item)"
             @show-history="emit('showHistory', item)"
+            @update="emit('updateDevice', item)"
           />
         </template>
       </div>

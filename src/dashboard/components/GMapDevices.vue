@@ -8,7 +8,7 @@ const GMAPS_KEY = `${import.meta.env.VITE_GMAPS_KEY}`
 const LOADER_OPTIONS: LoaderOptions = {
   apiKey: GMAPS_KEY,
   version: 'weekly',
-  libraries: [],
+  libraries: ['places', 'drawing'],
 }
 
 interface Position {
@@ -29,11 +29,11 @@ const emit = defineEmits(['markerClicked'])
 
 const { t } = useI18n()
 
-const mapRef: Ref<HTMLElement| null> = ref(null)
-const compRef: Ref<HTMLElement| null> = ref(null)
+const mapRef: Ref<HTMLElement | null> = ref(null)
+const compRef: Ref<HTMLElement | null> = ref(null)
 
-const map = ref(null)
-const api = ref(null)
+const map: any = ref(null)
+const api: any = ref(null)
 let infoWindow: any = null
 let latlngbounds: any = null
 let markers: any = []
@@ -44,7 +44,7 @@ const CompA = () => h('div', { calss: 'text-3xl', ref: 'compRef' }, [
   ],
 ])
 
-const mapOptions = reactive({
+const mapOptions: any = reactive({
   center: { lat: 40.7128, lng: -73.85 },
   zoom: 4,
   mapTypeId: null,
@@ -71,6 +71,7 @@ const centerMapView = () => {
     map.value.fitBounds(latlngbounds)
   }
 }
+
 watch(() => props.devices, (val) => {
   if (!map.value)
     return
@@ -80,7 +81,6 @@ watch(() => props.devices, (val) => {
     return
   }
 
-  // await nextTick()
   let selectedDevice = null
   // Add some markers to the map.
   markers = val.map(({ id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected }) => {
@@ -112,12 +112,40 @@ watch(() => props.devices, (val) => {
     markerClusterer.setMap(map.value)
   }
   else {
-    // markerClusterer.redraw()
     reinsertMarkers()
   }
 })
+const addDrawingManager = () => {
+  const drawingManager = new api.value.drawing.DrawingManager({
+    drawingMode: api.value.drawing.OverlayType.MARKER,
+    drawingControl: true,
+    drawingControlOptions: {
+      position: api.value.ControlPosition.TOP_CENTER,
+      drawingModes: [
+        api.value.drawing.OverlayType.MARKER,
+        api.value.drawing.OverlayType.CIRCLE,
+        api.value.drawing.OverlayType.POLYGON,
+        api.value.drawing.OverlayType.POLYLINE,
+        api.value.drawing.OverlayType.RECTANGLE,
+      ],
+    },
+    markerOptions: {
+      icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png',
+    },
+    circleOptions: {
+      fillColor: '#ffff00',
+      fillOpacity: 0.5,
+      strokeWeight: 2,
+      clickable: false,
+      editable: true,
+      draggable: true,
+      zIndex: 1,
+    },
+  })
 
-;(async() => {
+  drawingManager.setMap(map.value)
+}
+  ; (async() => {
   await until(mapRef).not.toBeNull()
 
   await new Loader(LOADER_OPTIONS).load()
@@ -132,27 +160,61 @@ watch(() => props.devices, (val) => {
   mapOptions.mapTypeId = google.maps.MapTypeId.ROADMAP
 })()
 
-;(async() => {
+; (async() => {
   await until(map).not.toBeNull()
 
   markers = []
+  addDrawingManager()
   // map.value.addListener('zoom_changed', reinsertMarkers)
   // map.value.addListener('zoom_changed', () => markerClusterer && markerClusterer.redraw())
   // markerCluster.value = new MarkerClusterer({
   //   markers: markers(props.devices, map.value),
   // })
 })()
-defineExpose({ map, api, mapOptions, centerMapView })
+const addRectangle = (bounds = {
+  north: 44.599,
+  south: 44.49,
+  east: -78.443,
+  west: -78.649,
+}) => {
+  // Define a rectangle and set its editable property to true.
+  const rectangle = new api.value.Rectangle({
+    bounds,
+    editable: true,
+  })
+
+  rectangle.setMap(map.value)
+}
+
+defineExpose({ map, api, mapOptions, centerMapView, addRectangle })
 </script>
 
 <template>
-  <div
-    ref="mapRef"
-    style="width: 100%; height: 100%"
-  />
+  <div ref="mapRef" style="width: 100%; height: 100%" />
 </template>
 <style>
 #map {
   height: 380px;
+}
+
+div[title="Stop drawing"] {
+  content: url(https://cdn4.iconfinder.com/data/icons/whsr-january-flaticon-set/128/compass.png) !important;
+  height: 28px;
+  width: 28px;
+  cursor: pointer;
+}
+
+div[title="Draw a circle"] {
+  content: url(http://www.pngmart.com/files/4/Moon-PNG-Transparent.png) !important;
+  height: 28px;
+  width: 28px;
+  cursor: pointer;
+}
+
+div[title="Draw a rectangle"] {
+  content: url(https://www.shareicon.net/data/32x32/2015/07/04/64183_rectangle_256x256.png) !important;
+  height: 28px;
+  width: 28px;
+  cursor: pointer;
 }
 </style>

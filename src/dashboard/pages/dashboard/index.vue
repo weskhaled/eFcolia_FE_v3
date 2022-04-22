@@ -17,6 +17,7 @@ const treeDataClients = ref<TreeSelectProps['treeData'] | null>(null)
 const selectedClient = ref()
 const devices = ref([])
 const selectedDevice = ref(null)
+const visibleDeviceFormModal = ref(false)
 const activeKeyDeviceDetails = ref('details')
 const showDeviceDetails = ref(false)
 const baseNumber = computed(() => showDeviceDetails.value && selectedDevice.value ? 100 : 0)
@@ -33,7 +34,7 @@ const dataHistories = ref(null)
 const mapToolsRef = ref(null)
 const devicesListRef = ref<HTMLElement | any>(null)
 const gmapRef = ref(null)
-const positionMapTools = useStorage('position-map-tools', { x: 10, y: 55 })
+const positionMapTools = useStorage('position-map-tools', { x: 10, y: 60 })
 const mapContainerRef = ref(null)
 const { elementX, elementY, isOutside } = useMouseInElement(mapContainerRef)
 
@@ -72,6 +73,10 @@ onMounted(async() => {
   selectedClient.value = currentUser.value?.client_id
 })
 watch(selectedClient, async(val) => {
+  if (devicesListRef.value) {
+    const { containerProps } = unref(devicesListRef)
+    containerProps?.ref?.value?.scroll(0, 0)
+  }
   devicesLoading.value = true
   showDeviceDetails.value = false
   selectedDevice.value = null
@@ -124,19 +129,41 @@ const deviceClicked = (deviceCard) => {
     }
   }
 }
+const addPolygonToMap = () => {
+  const { map, api } = gmapRef.value
+  const { lat, lng } = map.getCenter()
+  console.log(lat(), lng())
+
+  const blueCoords = [
+    { lat: lat(), lng: lng() },
+    { lat: lat() - 1, lng: lng() - 1 },
+    { lat: lat() + 1, lng: lat() + 1 },
+  ]
+  // Construct a draggable blue triangle with geodesic set to false.
+  const polygon = new api.Polygon({
+    paths: blueCoords,
+    strokeColor: '#0000FF',
+    strokeOpacity: 0.8,
+    strokeWeight: 2,
+    fillColor: '#0000FF',
+    fillOpacity: 0.35,
+    draggable: false,
+    geodesic: false,
+    editable: true,
+  })
+  polygon.setMap(map)
+}
 </script>
 
 <template>
-  <div class="flex w-full relative !flex-col-reverse !md:flex-row !min-h-full p-0">
+  <div class="flex w-full relative !flex-col-reverse !md:flex-row p-0">
     <a-layout-sider
-      v-model:collapsed="siderCollapsed"
-      class="!md:max-h-full bg-light-200 dark:bg-blue-gray-800"
+      v-model:collapsed="siderCollapsed" class="!md:max-h-full bg-white dark:bg-blue-gray-800"
       :class="asideCollapsed ? '!max-h-50px' : '!max-h-1/2'"
-      :width="mdAndLarger ? (showDeviceDetails && selectedDevice ? '55%' : 370) : '100%'"
-      :trigger="null"
+      :width="mdAndLarger ? (showDeviceDetails && selectedDevice ? '55%' : 370) : '100%'" :trigger="null"
       :collapsible="mdAndLarger" :collapsed-width="!mdAndLarger ? '100%' : 80"
     >
-      <div class="p-2 flex relative items-center z-10 shadow-sm bg-light-300 dark:bg-blue-gray-900">
+      <div class="p-2 flex relative items-center !h-auto z-10 shadow-sm bg-light-300 dark:bg-blue-gray-900">
         <template v-if="siderCollapsed">
           <a-button
             class="flex items-center justify-center mx-auto" type="primary"
@@ -169,12 +196,15 @@ const deviceClicked = (deviceCard) => {
               <template #title>
                 <span>{{ selectedDevice?.name }}</span>
               </template>
-              <span class="text-md dark:text-light-400">{{ `${selectedDevice?.name}`.slice(0, 10) }}{{
-                `${selectedDevice.name}`.length > 10 ? '...' : null
+              <span class="text-md dark:text-light-400">{{ `${selectedDevice?.name}`.slice(0, 20) }}{{
+                `${selectedDevice.name}`.length > 20 ? '...' : null
               }}</span>
             </a-tooltip>
           </div>
-          <h3 v-else-if="!showDeviceDetails" class="text-gray-800 dark:text-light-400 text-base leading-8 my-auto ml-0 mr-auto">
+          <h3
+            v-else-if="!showDeviceDetails"
+            class="text-gray-800 dark:text-light-400 text-base leading-8 my-auto ml-0 mr-auto"
+          >
             <span v-if="devices.length" class="text-sm leading-15px">{{ devices.length }}/{{ devicesCount }} {{
               t('common.devices.devices')
             }}</span>
@@ -182,9 +212,7 @@ const deviceClicked = (deviceCard) => {
           </h3>
           <div class="flex">
             <a-button
-              v-if="!mdAndLarger"
-              class="flex items-center justify-center flex-grow-0 mr-0"
-              type="primary"
+              v-if="!mdAndLarger" class="flex items-center justify-center flex-grow-0 mr-0" type="primary"
               @click="toggleAsideCollapsed()"
             >
               <template #icon>
@@ -195,10 +223,8 @@ const deviceClicked = (deviceCard) => {
               </template>
             </a-button>
             <a-button
-              v-if="mdAndLarger"
-              class="flex items-center justify-center mx-auto flex-grow-0 ml-2"
-              type="primary"
-              @click="() => siderCollapsed = !siderCollapsed"
+              v-if="mdAndLarger" class="flex items-center justify-center mx-auto flex-grow-0 ml-2"
+              type="primary" @click="() => siderCollapsed = !siderCollapsed"
             >
               <template #icon>
                 <span
@@ -218,14 +244,26 @@ const deviceClicked = (deviceCard) => {
               selectedDevice = device;
               showDeviceDetails = true;
               activeKeyDeviceDetails = 'details'
-            }" @show-history="(device) => {
+            }"
+            @show-history="(device) => {
               selectedDevice = device;
               showDeviceDetails = true;
               activeKeyDeviceDetails = 'histories'
             }"
+            @update-device="(device) => {
+              selectedDevice = device;
+              visibleDeviceFormModal = true;
+            }"
+            @add-new-device="() => {
+              selectedDevice = null;
+              visibleDeviceFormModal = true;
+            }"
           />
         </div>
-        <div class="block w-full absolute top-0 h-full" :style="{ transform: `translateX(${-transitionNumber + 100}%)` }">
+        <div
+          class="block w-full absolute top-0 h-full"
+          :style="{ transform: `translateX(${-transitionNumber + 100}%)` }"
+        >
           <div v-if="siderCollapsed" class="h-full">
             <div class="h-full">
               <div
@@ -271,48 +309,7 @@ const deviceClicked = (deviceCard) => {
                 <template #tab>
                   <span class="px-2">Details</span>
                 </template>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
-                <p>
-                  Content of tab 2
-                </p>
+                <DeviceInfos :device="selectedDevice" />
               </a-tab-pane>
               <a-tab-pane key="histories" class="h-full overflow-auto">
                 <template #tab>
@@ -332,8 +329,7 @@ const deviceClicked = (deviceCard) => {
                 <div class="bg-white mr-3px rounded-2px">
                   <a-range-picker
                     v-model:value="deviceDetailsDateRange"
-                    :disabled-date="(current) => current && current > dayjs().endOf('day')"
-                    format="YYYY-MM-DD"
+                    :disabled-date="(current) => current && current > dayjs().endOf('day')" format="YYYY-MM-DD"
                     class="flex-grow max-w-sm mr-0 ml-auto" :bordered="false"
                   />
                 </div>
@@ -352,7 +348,8 @@ const deviceClicked = (deviceCard) => {
           />
         </div>
         <div
-          ref="mapToolsRef" class="hidden md:block m-0 select-none absolute z-40 drop-shadow-sm rounded-sm overflow-hidden"
+          ref="mapToolsRef"
+          class="hidden md:block m-0 select-none absolute z-40 drop-shadow-sm rounded-sm overflow-hidden"
           :style="{ top: `${positionMapTools.y}px`, left: `${positionMapTools.x}px` }"
         >
           <div class="min-w-35 p-3 bg-white flex">
@@ -379,14 +376,28 @@ const deviceClicked = (deviceCard) => {
                 <span class="i-carbon-airport-location anticon block text-sm" />
               </template>
             </a-button>
-            <a-button class="flex items-center justify-center mr-1" type="primary" @click="() => (siderCollapsed = true)">
+            <a-button
+              class="flex items-center justify-center mr-1" type="primary"
+              @click="() => {siderCollapsed = true; addPolygonToMap()}"
+            >
               <template #icon>
                 <span class="i-carbon-area-custom anticon block text-sm" />
               </template>
             </a-button>
-            <a-button class="flex items-center justify-center mr-1" type="primary" @click="() => (siderCollapsed = true)">
+            <a-button
+              class="flex items-center justify-center mr-1" type="primary"
+              @click="() => (siderCollapsed = true)"
+            >
               <template #icon>
                 <span class="i-carbon-circle-dash anticon block text-sm" />
+              </template>
+            </a-button>
+            <a-button
+              class="flex items-center justify-center mr-1" type="primary"
+              @click="() => {siderCollapsed = true; gmapRef.value?.addRectangle()}"
+            >
+              <template #icon>
+                <span class="i-carbon-center-square anticon block text-sm" />
               </template>
             </a-button>
             <a-button class="flex items-center justify-center" type="primary" @click="() => (siderCollapsed = true)">
@@ -396,7 +407,7 @@ const deviceClicked = (deviceCard) => {
             </a-button>
           </div>
           <span
-            draggable="false"
+            draggable="true"
             class="absolute z-50 -top-0 -left-0 bg-gray-200 rounded-br-md w-18px h-18px cursor-move p-px select-none"
             :class="'bg-gray-800 text-light-100'" @drag.prevent="() => {
               if (!isOutside) {
@@ -408,19 +419,22 @@ const deviceClicked = (deviceCard) => {
             <span class="i-carbon-move inline-block text-12px" />
           </span>
         </div>
-        <div class="ml-16 md:ml-2.4 mt-2.5 min-w-34 md:min-w-40 p-1 bg-white text-gray-700 dark:bg-[#001628] dark:text-light-50 flex rounded-sm absolute top-0 left-0 z-40">
+        <div
+          class="ml-16 md:ml-2.4 mt-2.5 min-w-65 md:min-w-65 p-1 bg-white text-gray-700 dark:bg-[#001628] dark:text-light-50 flex rounded-sm absolute top-0 left-0 z-40"
+        >
           <span class="mr-2 leading-5 my-auto">{{ t('common.client') }}:</span>
           <a-tree-select
-            v-model:value="selectedClient" show-search class="w-65 max-w-full" tree-node-filter-prop="title"
-            :tree-default-expanded-keys="[1]" :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
-            placeholder="Please select a client" :tree-default-expand-all="false" tree-data-simple-mode
-            :disabled="!treeDataClients" :tree-data="treeDataClients || []" :height="233" virtual
+            v-model:value="selectedClient" show-search class="w-full md:min-w-70"
+            tree-node-filter-prop="title" :tree-default-expanded-keys="[1]"
+            :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }" placeholder="Please select a client"
+            :tree-default-expand-all="false" tree-data-simple-mode :disabled="!treeDataClients"
+            :tree-data="treeDataClients || []" :height="235" virtual
           >
             <template #title="{ title }">
               {{ title }}
             </template>
           </a-tree-select>
-          <a-badge-ribbon v-if="siderCollapsed" class="absolute !-top-4 !-right-4 !leading-20px">
+          <a-badge-ribbon class="absolute !-top-3.5 !-right-3 !leading-20px">
             <template #text>
               <span v-if="devices.length" class="text-12px leading-15px">{{ devices.length }}/{{ devicesCount }} {{
                 t('common.devices.devices')
@@ -432,26 +446,9 @@ const deviceClicked = (deviceCard) => {
       </div>
     </a-layout-content>
   </div>
+  <DeviceFormModal v-model:visible="visibleDeviceFormModal" :device="selectedDevice" :clients="treeDataClients" />
 </template>
 <style lang="less">
-.custom-btn {
-  box-sizing: border-box;
-  background: white;
-  height: 40px;
-  width: 40px;
-  border-radius: 2px;
-  border: 0px;
-  margin: 10px;
-  padding: 0px;
-  font-size: 1.25rem;
-  text-transform: none;
-  appearance: none;
-  cursor: pointer;
-  user-select: none;
-  box-shadow: rgba(0, 0, 0, 0.3) 0px 1px 4px -1px;
-  overflow: hidden;
-}
-
 .vue-map-container {
   width: 100%;
   height: 100%;

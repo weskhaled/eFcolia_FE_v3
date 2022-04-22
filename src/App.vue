@@ -11,7 +11,7 @@ dayjs.locale('en')
 // you can use this to manipulate the document head in any components,
 // they will be rendered correctly in the html results with vite-ssg
 useHead({
-  title: 'Vitesse',
+  title: 'Efcolia',
   meta: [
     { name: 'description', content: 'Opinionated Vite Starter Template' },
   ],
@@ -23,10 +23,17 @@ watch(() => locale.value, (val) => {
   userLang.value = val
   val === 'fr' && dayjs.locale(val)
 })
+const colorState = reactive({
+  primaryColor: '#ff0000',
+  errorColor: '#ff4d4f',
+  warningColor: '#faad14',
+  successColor: '#52c41a',
+  infoColor: '#1890ff',
+})
 </script>
 
 <template>
-  <a-config-provider :locale="locale === 'fr' ? frFR : enUS">
+  <a-config-provider :theme="colorState" :locale="locale === 'fr' ? frFR : enUS">
     <router-view />
   </a-config-provider>
 </template>

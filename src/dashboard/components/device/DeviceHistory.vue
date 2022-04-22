@@ -20,7 +20,7 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
   {
     isHidden: false,
     title: 'Date serveur',
-    width: 190,
+    width: 170,
     dataIndex: 'appdate',
     key: 'appdate',
     fixed: 'left',
@@ -153,7 +153,7 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
   },
   {
     isHidden: false,
-    width: 230,
+    width: 250,
     title: 'Adresse',
     dataIndex: 'adress',
     key: 'adress',

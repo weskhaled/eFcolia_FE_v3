@@ -78,11 +78,10 @@ const initChart = () => {
 }
 onMounted(async() => {
   await nextTick()
+  initChart()
 })
-// const isTogelSider = computed()
-watch([siderCollapsed, dataFormatter, chartRef], async([valSiderCollapsed, valData]) => {
-  console.log(valSiderCollapsed)
-  console.log(dataFormatter.value)
+
+watch([siderCollapsed, dataFormatter, chartRef], async([valData]) => {
   if (valData.length && chartRef.value)
     initChart()
 }, {
@@ -93,7 +92,14 @@ defineExpose({ chart })
 
 <template>
   <div ref="wrapperTableStatsRef" class="min-h-full bg-white pt-2">
-    <div ref="chartRef" />
+    <div ref="chartRef" :class="!dataFormatter.length && 'hidden'" />
+    <a-result v-if="!dataFormatter.length" status="404" title="404" sub-title="Sorry, the page you visited does not exist.">
+      <template #extra>
+        <a-button type="primary">
+          Back Home
+        </a-button>
+      </template>
+    </a-result>
   </div>
 </template>
 <style lang="less">
