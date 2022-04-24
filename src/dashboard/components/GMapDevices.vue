@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Comment, h } from 'vue'
 import type { LoaderOptions } from '@googlemaps/js-api-loader'
 import { Loader } from '@googlemaps/js-api-loader'
 import { MarkerClusterer } from '@googlemaps/markerclusterer'
@@ -27,10 +28,13 @@ const props = withDefaults(defineProps<Props>(), {
 })
 const emit = defineEmits(['markerClicked'])
 
+const slots = useSlots()
 const { t } = useI18n()
 
 const mapRef: Ref<HTMLElement | null> = ref(null)
 const compRef: Ref<HTMLElement | null> = ref(null)
+const controlRefTOPCENTER: Ref<HTMLElement | null> = ref(null)
+const showContentControlRefTOPCENTER = ref(false)
 
 const map: any = ref(null)
 const api: any = ref(null)
@@ -48,6 +52,8 @@ const mapOptions: any = reactive({
   center: { lat: 40.7128, lng: -73.85 },
   zoom: 4,
   mapTypeId: null,
+  disableDefaultUI: true,
+  zoomControl: true,
 })
 watch(mapOptions, (val) => {
   map.value && map.value.setOptions(val)
@@ -117,10 +123,10 @@ watch(() => props.devices, (val) => {
 })
 const addDrawingManager = () => {
   const drawingManager = new api.value.drawing.DrawingManager({
-    drawingMode: api.value.drawing.OverlayType.MARKER,
+    drawingMode: null,
     drawingControl: true,
     drawingControlOptions: {
-      position: api.value.ControlPosition.LEFT_CENTER,
+      position: api.value.ControlPosition.TOP_CENTER,
       drawingModes: [
         api.value.drawing.OverlayType.MARKER,
         api.value.drawing.OverlayType.CIRCLE,
@@ -130,7 +136,8 @@ const addDrawingManager = () => {
       ],
     },
     markerOptions: {
-      icon: 'https://api.iconify.design/carbon:flag-filled.svg?width=25px&height=25px&color=%23$aaaa00',
+      icon: 'https://api.iconify.design/carbon:flag-filled.svg?width=25px&height=25px&color=%2300aaff',
+      draggable: true,
     },
     circleOptions: {
       fillColor: '#ffff00',
@@ -141,11 +148,24 @@ const addDrawingManager = () => {
       draggable: true,
       zIndex: 1,
     },
+    polylineOptions: {
+      editable: true,
+      draggable: true,
+    },
+    rectangleOptions: {
+      editable: true,
+      draggable: true,
+    },
+    polygonOptions: {
+      editable: true,
+      draggable: true,
+    },
   })
 
   drawingManager.setMap(map.value)
 }
-  ; (async() => {
+
+(async() => {
   await until(mapRef).not.toBeNull()
 
   await new Loader(LOADER_OPTIONS).load()
@@ -165,6 +185,11 @@ const addDrawingManager = () => {
 
   markers = []
   addDrawingManager()
+
+  if (slots.default && slots.default().findIndex(o => o.type !== Comment) !== -1) {
+    showContentControlRefTOPCENTER.value = true
+    map.value.controls[api.value.ControlPosition.TOP_CENTER].push(controlRefTOPCENTER.value)
+  }
   // map.value.addListener('zoom_changed', reinsertMarkers)
   // map.value.addListener('zoom_changed', () => markerClusterer && markerClusterer.redraw())
   // markerCluster.value = new MarkerClusterer({
@@ -190,31 +215,15 @@ defineExpose({ map, api, mapOptions, centerMapView, addRectangle })
 </script>
 
 <template>
-  <div ref="mapRef" style="width: 100%; height: 100%" />
+  <div class="w-full h-full">
+    <div ref="mapRef" style="width: 100%; height: 100%" />
+    <div v-show="showContentControlRefTOPCENTER" ref="controlRefTOPCENTER">
+      <slot v-bind="{ map, api }" name="default" />
+    </div>
+  </div>
 </template>
 <style>
 #map {
   height: 380px;
-}
-
-div[title="Stop drawing"] {
-  content: url(https://cdn4.iconfinder.com/data/icons/whsr-january-flaticon-set/128/compass.png) !important;
-  height: 28px;
-  width: 28px;
-  cursor: pointer;
-}
-
-div[title="Draw a circle"] {
-  content: url(http://www.pngmart.com/files/4/Moon-PNG-Transparent.png) !important;
-  height: 28px;
-  width: 28px;
-  cursor: pointer;
-}
-
-div[title="Draw a rectangle"] {
-  content: url(https://www.shareicon.net/data/32x32/2015/07/04/64183_rectangle_256x256.png) !important;
-  height: 28px;
-  width: 28px;
-  cursor: pointer;
 }
 </style>

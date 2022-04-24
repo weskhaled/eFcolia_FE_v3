@@ -45,7 +45,7 @@ const { t } = useI18n()
       <a-descriptions-item label="imei">
         {{ device?.imei }}
       </a-descriptions-item>
-      <a-descriptions-item label="Address" :span="2">
+      <a-descriptions-item label="Address" :span="3">
         {{ device?.adress || 'Pas d\'adresse pour ce device' }}
       </a-descriptions-item>
     </a-descriptions>

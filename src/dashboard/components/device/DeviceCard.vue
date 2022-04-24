@@ -19,8 +19,7 @@ const { t } = useI18n()
   <a-card
     v-if="props.device" :bordered="true" size="small"
     :class="[props.device.selected && 'shadow-sm', props.device.selected && 'bg-blue-200/45 dark:bg-dark-900/60']"
-    :body-style="{ padding: 0 }"
-    class="w-full dark:bg-blue-gray-700/90 dark:border-blue-gray-900"
+    :body-style="{ padding: 0 }" class="w-full dark:bg-blue-gray-700/90 dark:border-blue-gray-900"
   >
     <template #actions>
       <span key="connected">
@@ -207,14 +206,23 @@ const { t } = useI18n()
   </a-card>
 </template>
 <style lang="less">
-.ant-card-actions {
-  @apply bg-white/50 dark:bg-black/30 dark:border-t-dark-500;
+.ant-card {
+  @apply flex flex-col;
 
-  >li {
-    @apply  !my-1.5;
-    &:not(:last-child) {
-      // border-right: 1px solid #f0f0f0;
-      @apply border-r-light-500 .dark:border-r-dark-500;
+  .ant-card-body {
+    @apply flex-grow-1;
+  }
+
+  .ant-card-actions {
+    @apply bg-white/50 dark:bg-black/30 dark:border-t-dark-500;
+
+    >li {
+      @apply  !my-1.5;
+
+      &:not(:last-child) {
+        // border-right: 1px solid #f0f0f0;
+        @apply border-r-light-500 .dark:border-r-dark-500;
+      }
     }
   }
 }

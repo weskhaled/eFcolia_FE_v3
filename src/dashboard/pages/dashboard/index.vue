@@ -2,21 +2,18 @@
 import type Dayjs from 'dayjs'
 import dayjs from 'dayjs'
 import { TransitionPresets, useDateFormat, useNow, useTransition } from '@vueuse/core'
-import type { TreeSelectProps } from 'ant-design-vue'
 
-import { currentUser, mdAndLarger, siderCollapsed } from '~/common/stores'
+import { devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, selectedDevice, siderCollapsed, treeDataClients } from '~/common/stores'
+import { urlSearchParams } from '~/common/composables'
 import service from '~/common/services/http'
 
 const router = useRouter()
 const { t } = useI18n()
+const { isFullscreen, toggle: toggleFullScreen } = useFullscreen(document.body)
 
 const { coords, isSupported } = useGeolocation()
 const [asideCollapsed, toggleAsideCollapsed] = useToggle()
 
-const treeDataClients = ref<TreeSelectProps['treeData'] | null>(null)
-const selectedClient = ref()
-const devices = ref([])
-const selectedDevice = ref(null)
 const visibleDeviceFormModal = ref(false)
 const activeKeyDeviceDetails = ref('details')
 const showDeviceDetails = ref(false)
@@ -25,8 +22,6 @@ const transitionNumber = useTransition(baseNumber, {
   duration: 200,
   transition: TransitionPresets.easeInOut,
 })
-const devicesCount = ref<number>(0)
-const devicesLoading = ref(false)
 
 const deviceDetailsDateRange = ref<[Dayjs, Dayjs]>([dayjs('2018-01-03 00:00:00'), dayjs('2018-01-04 00:00:00')])
 const dataHistories = ref(null)
@@ -38,56 +33,6 @@ const positionMapTools = useStorage('position-map-tools', { x: 10, y: 60 })
 const mapContainerRef = ref(null)
 const { elementX, elementY, isOutside } = useMouseInElement(mapContainerRef)
 
-const onLoadMore = async() => {
-  const length = devices.value.length
-  if (length < devicesCount.value - 1) {
-    devicesLoading.value = true
-    const { data } = await service.get(`api/device/byClientId/${selectedClient.value}?skip=${length}`)
-
-    if (data) {
-      devices.value = Array.from([...devices.value, ...data.listDevice].reduce((p, c) => p.set(c.id, c), new Map()).values())
-      devicesCount.value = data.count
-    }
-    devicesLoading.value = false
-  }
-}
-watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async() => {
-  const dateRange = unref(deviceDetailsDateRange)
-  let from = null
-  let to = null
-  if (dateRange && dateRange?.length > 1) {
-    from = dateRange[0].format('YYYY-MM-DD 00:00:00')
-    to = dateRange[1].format('YYYY-MM-DD 23:59:59')
-  }
-  if (selectedDevice.value && showDeviceDetails.value) {
-    dataHistories.value = null
-    const { data } = await service.get(`/api/history/${selectedDevice.value.id}?from=${from}&to=${to}`)
-
-    data && (dataHistories.value = data)
-  }
-})
-onMounted(async() => {
-  const { data } = await service.get('/api/client')
-
-  data && (treeDataClients.value = data)
-  selectedClient.value = currentUser.value?.client_id
-})
-watch(selectedClient, async(val) => {
-  if (devicesListRef.value) {
-    const { containerProps } = unref(devicesListRef)
-    containerProps?.ref?.value?.scroll(0, 0)
-  }
-  devicesLoading.value = true
-  showDeviceDetails.value = false
-  selectedDevice.value = null
-  const { data } = await service.get(`api/device/byClientId/${val}?skip=0`)
-
-  if (data) {
-    devices.value = data.listDevice
-    devicesCount.value = data.count
-  }
-  devicesLoading.value = false
-})
 const markerClicked = (deviceId) => {
   devices.value.filter(d => d.id !== deviceId).map(d => d.selected = false)
   const device = devices.value.find(d => d.id === deviceId)
@@ -109,6 +54,81 @@ const markerClicked = (deviceId) => {
     showDeviceDetails.value = false
   }
 }
+const onLoadMore = async() => {
+  const length = devices.value.length
+  if (length < devicesCount.value - 1) {
+    devicesLoading.value = true
+    const { data } = await service.get(`api/device/byClientId/${selectedClient.value}?skip=${length}`)
+
+    if (data) {
+      devices.value = Array.from([...devices.value, ...data.listDevice].reduce((p, c) => p.set(c.id, c), new Map()).values())
+      devicesCount.value = data.count
+    }
+    devicesLoading.value = false
+  }
+}
+watch([showDeviceDetails, activeKeyDeviceDetails], ([valShowDeviceDetails, valActiveKeyDeviceDetails]) => {
+  urlSearchParams.showDeviceDetails = valShowDeviceDetails || null
+  urlSearchParams.activeKeyDeviceDetails = valActiveKeyDeviceDetails || null
+})
+watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async() => {
+  urlSearchParams.deviceId = selectedDevice.value?.id || null
+
+  const dateRange = unref(deviceDetailsDateRange)
+  let from = null
+  let to = null
+  if (dateRange && dateRange?.length > 1) {
+    from = dateRange[0].format('YYYY-MM-DD 00:00:00')
+    to = dateRange[1].format('YYYY-MM-DD 23:59:59')
+  }
+  if (selectedDevice.value && showDeviceDetails.value) {
+    dataHistories.value = null
+    const { data } = await service.get(`/api/history/${selectedDevice.value.id}?from=${from}&to=${to}`)
+
+    data && (dataHistories.value = data)
+  }
+})
+watch(selectedClient, async(val) => {
+  urlSearchParams.clientId = val || null
+
+  if (devicesListRef.value) {
+    const { containerProps } = unref(devicesListRef)
+    containerProps?.ref?.value?.scroll(0, 0)
+  }
+  devicesLoading.value = true
+  showDeviceDetails.value = false
+  selectedDevice.value = null
+  const { data } = await service.get(`api/device/byClientId/${val}?skip=0`)
+
+  if (data) {
+    devices.value = data.listDevice
+    devicesCount.value = data.count
+  }
+  if (urlSearchParams.deviceId) {
+    // const { data: dataDevice } = await service.get(`/api/device/byClientId/${val}/${+urlSearchParams.deviceId}`)
+    // console.log(dataDevice)
+    const findedDevice = devices.value.find(d => +d.id === +urlSearchParams.deviceId)
+    await nextTick()
+    if (findedDevice) {
+      findedDevice.selected = true
+
+      const indexOfDevice = devices.value.findIndex(d => d.id === findedDevice.id)
+      devicesListRef.value?.scrollTo(indexOfDevice)
+      selectedDevice.value = findedDevice
+      useTimeoutFn(() => {
+        urlSearchParams.activeKeyDeviceDetails && (activeKeyDeviceDetails.value = urlSearchParams.activeKeyDeviceDetails)
+        showDeviceDetails.value = !!urlSearchParams.showDeviceDetails
+
+        if (gmapRef.value) {
+          gmapRef.value.mapOptions.center = { lat: findedDevice.latitude, lng: findedDevice.longitude }
+          gmapRef.value.mapOptions.zoom = 18
+        }
+      }, 500)
+    }
+  }
+
+  devicesLoading.value = false
+})
 const deviceClicked = (deviceCard) => {
   devices.value.filter(d => d.id !== deviceCard.id).map(d => d.selected = false)
   const device = devices.value.find(d => d.id === deviceCard.id)
@@ -160,7 +180,7 @@ const addPolygonToMap = () => {
     <a-layout-sider
       v-model:collapsed="siderCollapsed" class="!md:max-h-full bg-white dark:bg-blue-gray-800"
       :class="asideCollapsed ? '!max-h-50px' : '!max-h-1/2'"
-      :width="mdAndLarger ? (showDeviceDetails && selectedDevice ? '55%' : 370) : '100%'" :trigger="null"
+      :width="mdAndLarger ? (showDeviceDetails && selectedDevice ? 'calc(60% - 60px)' : 370) : '100%'" :trigger="null"
       :collapsible="mdAndLarger" :collapsed-width="!mdAndLarger ? '100%' : 80"
     >
       <div class="p-2 flex relative items-center !h-auto z-10 shadow-sm bg-light-300 dark:bg-blue-gray-900">
@@ -354,6 +374,7 @@ const addPolygonToMap = () => {
         >
           <div class="min-w-35 p-3 bg-white flex">
             <a-button
+              size="small"
               class="flex items-center justify-center mr-1" type="primary"
               @click="() => (siderCollapsed = !siderCollapsed)"
             >
@@ -365,6 +386,7 @@ const addPolygonToMap = () => {
               </template>
             </a-button>
             <a-button
+              size="small"
               class="flex items-center justify-center mr-1" type="primary" :disabled="!isSupported" @click="() => {
                 if (gmapRef) {
                   gmapRef.mapOptions.center = { lat: coords.latitude, lng: coords.longitude }
@@ -377,6 +399,7 @@ const addPolygonToMap = () => {
               </template>
             </a-button>
             <a-button
+              size="small"
               class="flex items-center justify-center mr-1" type="primary"
               @click="() => {siderCollapsed = true; addPolygonToMap()}"
             >
@@ -385,6 +408,7 @@ const addPolygonToMap = () => {
               </template>
             </a-button>
             <a-button
+              size="small"
               class="flex items-center justify-center mr-1" type="primary"
               @click="() => (siderCollapsed = true)"
             >
@@ -393,6 +417,7 @@ const addPolygonToMap = () => {
               </template>
             </a-button>
             <a-button
+              size="small"
               class="flex items-center justify-center mr-1" type="primary"
               @click="() => {siderCollapsed = true; gmapRef.value?.addRectangle()}"
             >
@@ -400,9 +425,9 @@ const addPolygonToMap = () => {
                 <span class="i-carbon-center-square anticon block text-sm" />
               </template>
             </a-button>
-            <a-button class="flex items-center justify-center" type="primary" @click="() => (siderCollapsed = true)">
+            <a-button size="small" class="flex items-center justify-center" type="primary" @click="toggleFullScreen">
               <template #icon>
-                <span class="i-carbon-map-center anticon block text-sm" />
+                <span class="anticon block text-sm" :class="isFullscreen ? 'i-ant-design-fullscreen-exit-outlined' : 'i-ant-design-fullscreen-outlined'" />
               </template>
             </a-button>
           </div>
@@ -418,30 +443,6 @@ const addPolygonToMap = () => {
           >
             <span class="i-carbon-move inline-block text-12px" />
           </span>
-        </div>
-        <div
-          class="ml-16 md:ml-2.4 mt-2.5 min-w-65 md:min-w-65 p-1 bg-white text-gray-700 dark:bg-[#001628] dark:text-light-50 flex rounded-sm absolute top-0 left-0 z-40"
-        >
-          <span class="mr-2 leading-5 my-auto">{{ t('common.client') }}:</span>
-          <a-tree-select
-            v-model:value="selectedClient" show-search class="w-full md:min-w-70"
-            tree-node-filter-prop="title" :tree-default-expanded-keys="[1]"
-            :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }" placeholder="Please select a client"
-            :tree-default-expand-all="false" tree-data-simple-mode :disabled="!treeDataClients"
-            :tree-data="treeDataClients || []" :height="235" virtual
-          >
-            <template #title="{ title }">
-              {{ title }}
-            </template>
-          </a-tree-select>
-          <a-badge-ribbon class="absolute !-top-3.5 !-right-3 !leading-20px">
-            <template #text>
-              <span v-if="devices.length" class="text-12px leading-15px">{{ devices.length }}/{{ devicesCount }} {{
-                t('common.devices.devices')
-              }}</span>
-              <span v-else class="text-12px leading-15px">{{ t('common.devices.notFound') }}</span>
-            </template>
-          </a-badge-ribbon>
         </div>
       </div>
     </a-layout-content>

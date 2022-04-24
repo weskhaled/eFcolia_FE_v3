@@ -76,14 +76,16 @@ const initChart = () => {
     },
   }).render()
 }
-onMounted(async() => {
-  await nextTick()
-  initChart()
-})
+// onMounted(async() => {
+//   await nextTick()
+//   initChart()
+// })
 
-watch([siderCollapsed, dataFormatter, chartRef], async([valData]) => {
-  if (valData.length && chartRef.value)
+watch([siderCollapsed, dataFormatter, chartRef], async() => {
+  if (dataFormatter.value.length && chartRef.value) {
+    await nextTick()
     initChart()
+  }
 }, {
   immediate: true,
 })
@@ -91,14 +93,21 @@ defineExpose({ chart })
 </script>
 
 <template>
-  <div ref="wrapperTableStatsRef" class="min-h-full bg-white pt-2">
-    <div ref="chartRef" :class="!dataFormatter.length && 'hidden'" />
-    <a-result v-if="!dataFormatter.length" status="404" title="404" sub-title="Sorry, the page you visited does not exist.">
-      <template #extra>
-        <a-button type="primary">
-          Back Home
-        </a-button>
+  <div ref="wrapperTableStatsRef" class="min-h-full bg-white pt-2 relative">
+    <div ref="chartRef" :class="(!dataFormatter.length || !props.dataHistories) && 'hidden'" />
+    <a-result v-if="!dataFormatter.length" title="No statistics" sub-title="Sorry, this device have no statistics">
+      <template #icon>
+        <div
+          v-if="!props.dataHistories"
+          class="w-full h-full bg-dark-500/15 dark:bg-light-500/35 z-44 items-center justify-center absolute top-0 left-0 pointer-events-auto flex"
+        >
+          <span class="i-ant-design-loading-outlined text-blue-800 dark:text-blue-500 text-2xl anticon-spin" />
+        </div>
+        <div v-else>
+          <img class="mx-auto max-w-80% h-200px" src="https://api.iconify.design/fxemoji:ghost.svg">
+        </div>
       </template>
+      <template #extra />
     </a-result>
   </div>
 </template>

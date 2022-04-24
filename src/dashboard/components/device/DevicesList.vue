@@ -23,7 +23,7 @@ const filteredList = computed(() => props.devices.filter(i => i.name))
 const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
   filteredList,
   {
-    itemHeight: 159,
+    itemHeight: 155,
     overscan: 10,
   },
 )
@@ -102,7 +102,7 @@ defineExpose({ scrollTo, containerProps })
     <div v-bind="wrapperProps">
       <div
         v-for="{ index, data: item } in list" :id="`device-id-${item.id}`" :key="index"
-        class="py-1 px-1 flex items-center" :class="siderCollapsed ? 'justify-center' : 'justify-start'"
+        class="flex items-center h-155px p-1" :class="siderCollapsed ? 'justify-center' : 'justify-start'"
       >
         <template v-if="siderCollapsed">
           <a-tooltip :color="item.gprsstate === 1 ? 'green' : 'red'" placement="right">
@@ -111,7 +111,7 @@ defineExpose({ scrollTo, containerProps })
             </template>
 
             <div
-              class="block group flex items-center justify-center transition-all cursor-pointer ease-in duration-100 h-151px w-full rounded-sm text-dark-800 relative"
+              class="block group flex items-center justify-center transition-all cursor-pointer ease-in duration-100 h-full w-full rounded-sm text-dark-800 relative"
               :class="item.selected ? 'bg-gray-400 hover:bg-gray-500' : 'bg-gray-100 hover:bg-gray-200'"
               @click="emit('deviceClicked', item)"
             >

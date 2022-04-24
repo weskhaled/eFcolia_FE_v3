@@ -18,8 +18,6 @@ const emit = defineEmits(['updateDevice'])
 const { t } = useI18n()
 const useForm = Form.useForm
 
-const labelCol = ref({ span: 6 })
-const wrapperCol = ref({ span: 18 })
 const modelRef = reactive({
   name: '',
   clientId: undefined,
