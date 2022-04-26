@@ -4,7 +4,7 @@ import { mdAndLarger } from '~/common/stores'
 
 const { t, availableLocales, locale } = useI18n()
 
-const selectedKeysSider = ref<string[]>(['3'])
+const selectedKeysSider = ref<string[]>(['1'])
 const openKeySider = ref<string[]>(['sub1'])
 </script>
 
@@ -21,13 +21,13 @@ const openKeySider = ref<string[]>(['sub1'])
       <a-menu-item key="1">
         <span class>
           <span class="i-ph-car-duotone inline-block anticon text-lg" />
-          <span>nav 1</span>
+          <span>Devices List</span>
         </span>
       </a-menu-item>
       <a-menu-item key="2">
         <span class>
           <span class="i-ant-design-alert-twotone inline-block anticon text-lg" />
-          <span>nav 1</span>
+          <span>Alert</span>
         </span>
       </a-menu-item>
       <a-menu-item key="3">

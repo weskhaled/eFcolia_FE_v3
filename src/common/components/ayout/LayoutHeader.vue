@@ -3,7 +3,8 @@ import { isDark, urlSearchParams } from '~/common/composables'
 import { currentUser, devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, siderCollapsed, token, treeDataClients } from '~/common/stores'
 
 const { t, availableLocales, locale } = useI18n()
-const { width, height } = useWindowSize()
+// const router = useRouter()
+const { width } = useWindowSize()
 </script>
 
 <template>
@@ -16,7 +17,7 @@ const { width, height } = useWindowSize()
       :class="(!siderCollapsed && mdAndLarger) ? (urlSearchParams.showDeviceDetails ? '!w-[calc(60%-422px)]' : '!w-[calc(415px)]') : '!w-31.2'"
       class="h-full ml-0 transition-all ease-out delay-0.2s flex items-center border-r-1 border-dark-100/5 dark:border-light-100/5"
     >
-      <span class="inline-block mr-2">
+      <a href="" class="inline-block mr-2" @click.prevent="$router.push('/')">
         <a-badge-ribbon class="!text-10px !-top-2.2 !rounded-2px">
           <template #text>
             by MatiaSat
@@ -27,7 +28,7 @@ const { width, height } = useWindowSize()
             efcolia
           </span>
         </a-badge-ribbon>
-      </span>
+      </a>
     </div>
     <div class="flex flex-grow px-3 w-auto h-full">
       <div class="text-gray-900 w-full mr-2 md:max-w-94.4 text-md dark:text-light-100 rounded-sm flex items-center border-r-1 border-dark-100/5 dark:border-light-100/5">

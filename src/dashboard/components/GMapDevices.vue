@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { Comment, h } from 'vue'
+import { Comment } from 'vue'
 import type { LoaderOptions } from '@googlemaps/js-api-loader'
 import { Loader } from '@googlemaps/js-api-loader'
 import { MarkerClusterer } from '@googlemaps/markerclusterer'
-import { Button } from 'ant-design-vue'
 
 const GMAPS_KEY = `${import.meta.env.VITE_GMAPS_KEY}`
 const LOADER_OPTIONS: LoaderOptions = {
@@ -20,11 +19,13 @@ interface Position {
 interface Props {
   center?: Ref<Position>
   devices?: Ref<any[]>
+  selectedDevice?: Ref<any>
 }
 
 const props = withDefaults(defineProps<Props>(), {
   center: () => ref(({ lat: 24.886, lng: -70.268 })),
   devices: () => ref([]),
+  selectedDevice: () => ref(null),
 })
 const emit = defineEmits(['markerClicked'])
 
@@ -42,11 +43,6 @@ let infoWindow: any = null
 let latlngbounds: any = null
 let markers: any = []
 let markerClusterer: any = null
-const CompA = () => h('div', { calss: 'text-3xl', ref: 'compRef' }, [
-  [
-    h(Button, { type: 'danger', class: 'ml-1' }, 'asdfasd'),
-  ],
-])
 
 const mapOptions: any = reactive({
   center: { lat: 40.7128, lng: -73.85 },
@@ -87,17 +83,17 @@ watch(() => props.devices, (val) => {
     return
   }
 
-  let selectedDevice = null
   // Add some markers to the map.
   markers = val.map(({ id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected }) => {
-    selected && (selectedDevice = { id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected })
+    // selected && (selectedDevice.value = { id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected })
     const marker = new google.maps.Marker({
       position: { lat, lng },
       icon: `https://api.iconify.design/ic:sharp-directions-car.svg?width=25px&height=25px&color=%23${gprsState ? '00aa00' : 'aa0000'}`,
       label: {
         text: `${name}`,
-        className: 'bg-white relative -top-6 p-1 text-sm rounded-sm',
+        className: 'bg-white text-black dark:bg-dark-600 !dark:text-light-300 relative -top-6 p-1 text-sm rounded-sm',
       },
+      opacity: id === unref(props.selectedDevice)?.id ? 1 : 0.65,
     })
     latlngbounds.extend(marker.position)
     // markers can only be keyboard focusable when they have click listeners
@@ -111,7 +107,7 @@ watch(() => props.devices, (val) => {
     return marker
   })
 
-  !selectedDevice && centerMapView()
+  !unref(props.selectedDevice) && centerMapView()
 
   if (!markerClusterer) {
     markerClusterer = new MarkerClusterer({ markers })
@@ -215,7 +211,7 @@ defineExpose({ map, api, mapOptions, centerMapView, addRectangle })
 </script>
 
 <template>
-  <div class="w-full h-full">
+  <div>
     <div ref="mapRef" style="width: 100%; height: 100%" />
     <div v-show="showContentControlRefTOPCENTER" ref="controlRefTOPCENTER">
       <slot v-bind="{ map, api }" name="default" />

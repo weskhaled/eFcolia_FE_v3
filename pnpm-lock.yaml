@@ -17,6 +17,7 @@ specifiers:
   '@vueuse/components': ^8.2.6
   '@vueuse/core': ^8.2.6
   '@vueuse/head': ^0.7.6
+  '@vueuse/integrations': ^8.3.1
   ant-design-vue: ^3.2.0
   axios: ^0.26.1
   critters: ^0.0.16
@@ -25,6 +26,7 @@ specifiers:
   dayjs: ^1.11.1
   eslint: ^8.13.0
   eslint-plugin-cypress: ^2.12.1
+  fuse.js: ^6.5.3
   fusioncharts: ^3.18.0
   https-localhost: ^4.7.1
   leaflet: ^1.8.0
@@ -63,9 +65,11 @@ dependencies:
   '@vueuse/components': 8.2.6_vue@3.2.33
   '@vueuse/core': 8.2.6_vue@3.2.33
   '@vueuse/head': 0.7.6_vue@3.2.33
+  '@vueuse/integrations': 8.3.1_4d35b9b00a5feefc2cf03b3d13cf686a
   ant-design-vue: 3.2.0_vue@3.2.33
   axios: 0.26.1
   dayjs: 1.11.1
+  fuse.js: 6.5.3
   fusioncharts: 3.18.0
   leaflet: 1.8.0
   nprogress: 0.2.0
@@ -2421,6 +2425,23 @@ packages:
       vue-demi: 0.12.5_vue@3.2.33
     dev: false
 
+  /@vueuse/core/8.3.1_vue@3.2.33:
+    resolution: {integrity: sha512-WiXUgVyPG9elGx3G8UV8g+zqbEJ2hYacrPICogAxDdW6hnxxcUFdF7FtvDroJ/DxWmo2pg8XNNz07ybfnZyJbw==}
+    peerDependencies:
+      '@vue/composition-api': ^1.1.0
+      vue: ^2.6.0 || ^3.2.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+      vue:
+        optional: true
+    dependencies:
+      '@vueuse/metadata': 8.3.1
+      '@vueuse/shared': 8.3.1_vue@3.2.33
+      vue: 3.2.33
+      vue-demi: 0.12.5_vue@3.2.33
+    dev: false
+
   /@vueuse/head/0.7.6_vue@3.2.33:
     resolution: {integrity: sha512-cOWqCkT3WiF5oEpw+VVEWUJd9RLD5rc7DmnFp3cePsejp+t7686uKD9Z9ZU7Twb7R/BI8iexKTmXo9D/F3v6UA==}
     peerDependencies:
@@ -2429,12 +2450,72 @@ packages:
       vue: 3.2.33
     dev: false
 
+  /@vueuse/integrations/8.3.1_4d35b9b00a5feefc2cf03b3d13cf686a:
+    resolution: {integrity: sha512-E9AK+DsUM2m5jxdzAAyakjbM3dZcmalVMTQKlRkP4wMIreJnp504ekaUS7+LFvs12qOSxcwXwsTQD9PYd5ZRVA==}
+    peerDependencies:
+      axios: '*'
+      change-case: '*'
+      drauu: '*'
+      focus-trap: '*'
+      fuse.js: '*'
+      jwt-decode: '*'
+      nprogress: '*'
+      qrcode: '*'
+      universal-cookie: '*'
+    peerDependenciesMeta:
+      axios:
+        optional: true
+      drauu:
+        optional: true
+      focus-trap:
+        optional: true
+      fuse.js:
+        optional: true
+      jwt-decode:
+        optional: true
+      nprogress:
+        optional: true
+      qrcode:
+        optional: true
+      universal-cookie:
+        optional: true
+    dependencies:
+      '@vueuse/core': 8.3.1_vue@3.2.33
+      '@vueuse/shared': 8.3.1_vue@3.2.33
+      axios: 0.26.1
+      fuse.js: 6.5.3
+      nprogress: 0.2.0
+      vue-demi: 0.12.5_vue@3.2.33
+    transitivePeerDependencies:
+      - '@vue/composition-api'
+      - vue
+    dev: false
+
   /@vueuse/metadata/8.2.6:
     resolution: {integrity: sha512-OBKtafCt+4RcEJlYDCjp1vl65pBCL2g4TmipEtdZ8/qphKlW6nakJbkY7XRN5grPmjqU99/ahJGtyGk5NHS2hw==}
     dev: false
 
+  /@vueuse/metadata/8.3.1:
+    resolution: {integrity: sha512-1aZaFL44HzXXkfN6Q7KMDOXBFKTHDClHlOJBxtN8rTBXIIScoGOrJCpxWiQ4kuVg95MzG/pHrd3P4wd8poL9XQ==}
+    dev: false
+
   /@vueuse/shared/8.2.6_vue@3.2.33:
     resolution: {integrity: sha512-J/W4CMfdL8TahELuSOgtfVO4eQXTjhigp7dVWIBsLUVFCeY9d49gvHUcQN3y5xYLZ6iNP57TjTQjMMT/zhklkw==}
+    peerDependencies:
+      '@vue/composition-api': ^1.1.0
+      vue: ^2.6.0 || ^3.2.0
+    peerDependenciesMeta:
+      '@vue/composition-api':
+        optional: true
+      vue:
+        optional: true
+    dependencies:
+      vue: 3.2.33
+      vue-demi: 0.12.5_vue@3.2.33
+    dev: false
+
+  /@vueuse/shared/8.3.1_vue@3.2.33:
+    resolution: {integrity: sha512-7HKLCcxp4dtONq6QSSoavblo9riYgqzw7jhqiC0/VUYMXKzqj1G/GznOzTmY8Wi8uKKT197JqjKQ1DKt2j/0+A==}
     peerDependencies:
       '@vue/composition-api': ^1.1.0
       vue: ^2.6.0 || ^3.2.0
@@ -4580,6 +4661,11 @@ packages:
   /functional-red-black-tree/1.0.1:
     resolution: {integrity: sha1-GwqzvVU7Kg1jmdKcDj6gslIHgyc=}
     dev: true
+
+  /fuse.js/6.5.3:
+    resolution: {integrity: sha512-sA5etGE7yD/pOqivZRBvUBd/NaL2sjAu6QuSaFoe1H2BrJSkH/T/UXAJ8CdXdw7DvY3Hs8CXKYkDWX7RiP5KOg==}
+    engines: {node: '>=10'}
+    dev: false
 
   /fusioncharts/3.18.0:
     resolution: {integrity: sha512-PmBNI8RIDHT+xwm3mSquusnLEpKWNDyvyBkMqkMbTuYEHmGVnRmrwQDw8VutIBE+/vyLmfuZ+Ptlg7RiFMrE7w==}

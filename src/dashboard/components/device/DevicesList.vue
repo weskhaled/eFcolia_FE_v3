@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { vInfiniteScroll } from '@vueuse/components'
+import { useFuse, UseFuseOptions } from '@vueuse/integrations/useFuse'
 import { useVirtualList } from '@vueuse/core'
 import { mdAndLarger, siderCollapsed } from '~/common/stores'
 
@@ -18,6 +19,46 @@ const emit = defineEmits(['deviceClicked', 'onLoadMore', 'showDetails', 'showHis
 
 const { t } = useI18n()
 
+const search = ref('')
+const filterBy = ref('name')
+const keys = computed(() => {
+  if (filterBy.value === 'name')
+    return ['name']
+  else if (filterBy.value === 'simcardNumber')
+    return ['simcardNumber']
+  else return ['name', 'simcardNumber']
+})
+const resultLimit = ref<number | undefined>(undefined)
+const resultLimitString = ref<string>('')
+watch(resultLimitString, () => {
+  if (resultLimitString.value === '') {
+    resultLimit.value = undefined
+  }
+  else {
+    const float = parseFloat(resultLimitString.value)
+    if (!isNaN(float)) {
+      resultLimit.value = Math.round(float)
+      resultLimitString.value = resultLimit.value.toString()
+    }
+  }
+})
+const exactMatch = ref(false)
+const isCaseSensitive = ref(false)
+const matchAllWhenSearchEmpty = ref(false)
+const options = computed<any>(() => ({
+  fuseOptions: {
+    keys: keys.value,
+    isCaseSensitive: isCaseSensitive.value,
+    threshold: exactMatch.value ? 0 : undefined,
+    includeMatches: false,
+    minMatchCharLength: 3,
+    findAllMatches: false,
+    useExtendedSearch: true,
+  },
+  resultLimit: resultLimit.value,
+  matchAllWhenSearchEmpty: matchAllWhenSearchEmpty.value,
+}))
+
 const filteredList = computed(() => props.devices.filter(i => i.name))
 
 const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
@@ -27,7 +68,14 @@ const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
     overscan: 10,
   },
 )
-
+const { results } = useFuse(search, filteredList , options)
+watch(results, () => {
+  console.log(results.value)
+  if(search.length > 3) {
+    console.log(search)
+    console.log(results)
+  }
+})
 defineExpose({ scrollTo, containerProps })
 </script>
 
@@ -64,6 +112,7 @@ defineExpose({ scrollTo, containerProps })
             placeholder="input search loading with enterButton"
             :loading="props.devicesLoading" :disabled="props.devicesCount === 0" enter-button
             class="flex-grow max-w-full mr-2"
+            v-model:value="search"
           />
         </div>
         <div>
@@ -101,7 +150,8 @@ defineExpose({ scrollTo, containerProps })
     </div>
     <div v-bind="wrapperProps">
       <div
-        v-for="{ index, data: item } in list" :id="`device-id-${item.id}`" :key="index"
+        v-for="{ index, data: item } in list"
+        :id="`device-id-${item.id}`" :key="index" draggable="true"
         class="flex items-center h-155px p-1" :class="siderCollapsed ? 'justify-center' : 'justify-start'"
       >
         <template v-if="siderCollapsed">

@@ -74,7 +74,7 @@ watch(() => props.device, () => {
         <a-form-item label="Name" v-bind="validateInfos.name">
           <a-input v-model:value="modelRef.name" />
         </a-form-item>
-        <a-form-item label="Client" v-bind="validateInfos.client">
+        <a-form-item label="Client" v-bind="validateInfos.clientId">
           <a-tree-select
             v-model:value="modelRef.clientId" show-search class="w-full md:min-w-70"
             tree-node-filter-prop="title" :tree-default-expanded-keys="[1]"

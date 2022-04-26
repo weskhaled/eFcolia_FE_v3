@@ -152,26 +152,8 @@ const deviceClicked = (deviceCard) => {
 const addPolygonToMap = () => {
   const { map, api } = gmapRef.value
   const { lat, lng } = map.getCenter()
+  console.log(api)
   console.log(lat(), lng())
-
-  const blueCoords = [
-    { lat: lat(), lng: lng() },
-    { lat: lat() - 1, lng: lng() - 1 },
-    { lat: lat() + 1, lng: lat() + 1 },
-  ]
-  // Construct a draggable blue triangle with geodesic set to false.
-  const polygon = new api.Polygon({
-    paths: blueCoords,
-    strokeColor: '#0000FF',
-    strokeOpacity: 0.8,
-    strokeWeight: 2,
-    fillColor: '#0000FF',
-    fillOpacity: 0.35,
-    draggable: false,
-    geodesic: false,
-    editable: true,
-  })
-  polygon.setMap(map)
 }
 </script>
 
@@ -363,7 +345,7 @@ const addPolygonToMap = () => {
       <div ref="mapContainerRef" class="overflow-hidden !h-full !w-full relative">
         <div class="w-full h-full">
           <GMapDevices
-            ref="gmapRef" :devices="devices.filter(d => d.latitude && d.longitude)" class="h-full w-full"
+            ref="gmapRef" :selected-device="selectedDevice" :devices="devices.filter(d => d.latitude && d.longitude)" class="h-full w-full"
             @marker-clicked="markerClicked"
           />
         </div>
@@ -401,7 +383,6 @@ const addPolygonToMap = () => {
             <a-button
               size="small"
               class="flex items-center justify-center mr-1" type="primary"
-              @click="() => {siderCollapsed = true; addPolygonToMap()}"
             >
               <template #icon>
                 <span class="i-carbon-area-custom anticon block text-sm" />
