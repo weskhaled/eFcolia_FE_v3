@@ -16,7 +16,7 @@ const openKeySider = ref<string[]>(['sub1'])
       :theme="isDark ? 'dark' : 'light'"
       :mode="mdAndLarger ? 'inline': 'horizontal'"
       :style="{ height: '100%' }"
-      class="pt-1"
+      class=""
     >
       <a-menu-item key="1">
         <span class>

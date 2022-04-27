@@ -5,6 +5,7 @@ import frFR from 'ant-design-vue/es/locale/fr_FR.js'
 import enUS from 'ant-design-vue/es/locale/en_US.js'
 
 import { userLang } from '~/common/stores'
+import { isDark } from '~/common/composables'
 
 dayjs.locale('en')
 // https://github.com/vueuse/head
@@ -16,7 +17,16 @@ useHead({
     { name: 'description', content: 'Opinionated Vite Starter Template' },
   ],
 })
+const {
+  load,
+  unload,
+} = useStyleTag(`@import 'https://unpkg.com/ant-design-vue@3.2.1/dist/antd.dark.css';`)
 
+watch(isDark, (value) => {
+  value ? load() : unload()
+}, {
+  immediate: true
+})
 const { locale } = useI18n()
 
 watch(() => locale.value, (val) => {

@@ -317,7 +317,7 @@ const addPolygonToMap = () => {
                 <template #tab>
                   <span class="px-2">History</span>
                 </template>
-                <div class="bg-gray-50 h-full">
+                <div class="bg-gray-50 dark:bg-dark-600 h-full">
                   <DeviceHistory :data-histories="dataHistories" />
                 </div>
               </a-tab-pane>
@@ -328,7 +328,7 @@ const addPolygonToMap = () => {
                 <DeviceHistoryStatistics :data-histories="dataHistories" />
               </a-tab-pane>
               <template v-if="activeKeyDeviceDetails !== 'details'" #rightExtra>
-                <div class="bg-white mr-3px rounded-2px">
+                <div class="bg-white dark:bg-dark-300 mr-3px rounded-2px">
                   <a-range-picker
                     v-model:value="deviceDetailsDateRange"
                     :disabled-date="(current) => current && current > dayjs().endOf('day')" format="YYYY-MM-DD"
@@ -438,7 +438,7 @@ const addPolygonToMap = () => {
 
 .device-history-table {
   .ant-tabs-nav {
-    @apply bg-zinc-100;
+    @apply bg-zinc-100 dark:bg-dark-500;
   }
 
   .ant-tabs-content {
