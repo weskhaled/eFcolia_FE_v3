@@ -30,7 +30,7 @@ watch(
   <a-layout>
     <LayoutHeader />
     <a-layout class="!min-h-[calc(100vh-55px)] relative">
-      <LayoutSider class="absolute top-0 md:block md:relative" />
+      <LayoutSider class="!absolute !top-0 !md:block !md:relative" />
       <a-layout>
         <router-view />
       </a-layout>

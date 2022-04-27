@@ -60,7 +60,7 @@ const { t } = useI18n()
                 :class="props.device.enginestate ? (props.device.enginestate === 3 ? 'text-green-500' : 'text-red-500') : 'text-gray-400'"
               />
               <a-badge
-                class="absolute -top-10px -right-10px"
+                class="!absolute -top-10px -right-10px"
                 :status="props.device.enginestate ? (props.device.enginestate === 3 ? 'success' : 'error') : 'default'"
               />
             </span>

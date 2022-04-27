@@ -9,7 +9,7 @@ const openKeySider = ref<string[]>(['sub1'])
 </script>
 
 <template>
-  <a-layout-sider class="z-42 min-h-12.5 md:rounded-none rounded-b-sm overflow-hidden" collapsed :trigger="null" collapsed-width="60">
+  <a-layout-sider class="z-42 md:rounded-none rounded-b-sm overflow-hidden" collapsed :trigger="null" collapsed-width="60">
     <a-menu
       v-model:selectedKeys="selectedKeysSider"
       v-model:openKeys="openKeySider"

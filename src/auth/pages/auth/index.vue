@@ -39,8 +39,8 @@ const disabled = computed(() => {
 </script>
 
 <template>
-  <div class="flex items-center min-h-screen p-6 bg-gray-200 dark:bg-gray-900">
-    <div class="flex-1 relative h-full max-w-3xl mx-auto overflow-hidden bg-white rounded-md shadow-md shadow-gray-100/10">
+  <div class="flex items-center min-h-screen p-6 bg-blue-100 dark:bg-blue-gray-900">
+    <div class="flex-1 relative h-full max-w-3xl mx-auto overflow-hidden bg-white dark:bg-dark-500 rounded-md shadow-md shadow-gray-100/10">
       <div class="flex flex-col overflow-y-auto md:flex-row">
         <div class="h-32 md:h-auto md:w-2/5">
           <img aria-hidden="true" class="object-cover w-full h-full dark:hidden" src="https://images.unsplash.com/photo-1524661135-423995f22d0b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1774&q=80" alt="Office">
@@ -51,7 +51,7 @@ const disabled = computed(() => {
             <div class="absolute top-2 right-2">
               <DarkSwitch />
             </div>
-            <h1 class="mb-4 text-3xl font-semibold text-gray-700 dark:text-gray-700">
+            <h1 class="mb-4 text-3xl font-semibold text-dark-700 dark:text-light-200">
               Login
             </h1>
             <div>
@@ -90,7 +90,7 @@ const disabled = computed(() => {
                 <div class="login-form-wrap">
                   <a-form-item name="remember" no-style>
                     <a-checkbox>
-                      <span class="text-dark-800">
+                      <span class="text-dark-700 dark:text-light-200">
                         Remember me
                       </span>
                     </a-checkbox>

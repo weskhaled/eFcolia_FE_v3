@@ -171,7 +171,7 @@ defineExpose({ scrollTo, containerProps })
               />
               <a-badge
                 :text="false" :status="item.gprsstate === 1 ? 'success' : 'error'"
-                class="absolute -top-2.5 -right-0 w-1 h-1"
+                class="!absolute -top-2.5 -right-0 w-1 h-1"
               />
               <span class="inline-block text-xs uppercase">{{ `${item.name}`.slice(0, 6) }}{{
                 `${item.name}`.length > 6
