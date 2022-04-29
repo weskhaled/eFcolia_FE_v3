@@ -4,7 +4,7 @@ import type Dayjs from 'dayjs'
 import dayjs from 'dayjs'
 import { TransitionPresets, useDateFormat, useNow, useTransition } from '@vueuse/core'
 
-import { devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, selectedDevice, siderCollapsed, treeDataClients } from '~/common/stores'
+import { devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, selectedDevice, sideCollapsed, treeDataClients } from '~/common/stores'
 import { urlSearchParams } from '~/common/composables'
 import service from '~/common/services/http'
 
@@ -30,7 +30,7 @@ const dataHistories = ref(null)
 const mapToolsRef = ref(null)
 const devicesListRef = ref<HTMLElement | any>(null)
 const gmapRef = ref(null)
-const positionMapTools = useStorage('position-map-tools', { x: 10, y: 60 })
+const positionMapTools = useStorage('position-map-tools', { x: 10, y: 10 })
 const mapContainerRef = ref(null)
 const { elementX, elementY, isOutside } = useMouseInElement(mapContainerRef)
 
@@ -41,12 +41,12 @@ const markerClicked = (deviceId) => {
   if (device && device.selected) {
     if (gmapRef.value) {
       gmapRef.value.mapOptions.center = { lat: device.latitude, lng: device.longitude }
-      gmapRef.value.mapOptions.zoom = 18
+      gmapRef.value.mapOptions.zoom = 21
     }
     const indexOfDevice = devices.value.findIndex(d => d.id === deviceId)
     devicesListRef.value?.scrollTo(indexOfDevice)
     selectedDevice.value = device
-    if (siderCollapsed.value && showDeviceDetails.value)
+    if (sideCollapsed.value && showDeviceDetails.value)
       showDeviceDetails.value = false
   }
   else {
@@ -146,7 +146,7 @@ watch(selectedClient, async(val) => {
 
         if (gmapRef.value) {
           gmapRef.value.mapOptions.center = { lat: findedDevice.latitude, lng: findedDevice.longitude }
-          gmapRef.value.mapOptions.zoom = 18
+          gmapRef.value.mapOptions.zoom = 21
         }
       }, 500)
     }
@@ -167,9 +167,12 @@ const deviceClicked = (deviceCard) => {
       }
       else {
         device.selected = true
-        gmapRef.value.mapOptions.center = { lat: device.latitude, lng: device.longitude }
-        gmapRef.value.mapOptions.zoom = 18
-        selectedDevice.value = device
+        const { latitude: lat, longitude: lng } = device
+        if (lat && lng) {
+          gmapRef.value.mapOptions.center = { lat: device.latitude, lng: device.longitude }
+          gmapRef.value.mapOptions.zoom = 21
+          selectedDevice.value = device
+        }
       }
     }
   }
@@ -185,20 +188,20 @@ const addPolygonToMap = () => {
 <template>
   <div class="flex w-full relative !flex-col-reverse !md:flex-row p-0">
     <a-layout-sider
-      v-model:collapsed="siderCollapsed" class="!md:max-h-full bg-white dark:bg-blue-gray-800"
+      v-model:collapsed="sideCollapsed" class="!md:max-h-full bg-white dark:bg-blue-gray-800"
       :class="asideCollapsed ? '!max-h-50px' : '!max-h-1/2'"
       :width="mdAndLarger ? (showDeviceDetails && selectedDevice ? 'calc(60% - 60px)' : 370) : '100%'" :trigger="null"
       :collapsible="mdAndLarger" :collapsed-width="!mdAndLarger ? '100%' : 80"
     >
       <div class="p-2 flex relative items-center !h-auto z-10 shadow-sm bg-light-300 dark:bg-blue-gray-900">
-        <template v-if="siderCollapsed">
+        <template v-if="sideCollapsed">
           <a-button
             class="flex items-center justify-center mx-auto" type="primary"
-            @click="() => (siderCollapsed = !siderCollapsed)"
+            @click="() => (sideCollapsed = !sideCollapsed)"
           >
             <template #icon>
               <span
-                :class="siderCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
+                :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
                 class="anticon block text-base"
               />
             </template>
@@ -251,11 +254,11 @@ const addPolygonToMap = () => {
             </a-button>
             <a-button
               v-if="mdAndLarger" class="flex items-center justify-center mx-auto flex-grow-0 ml-2"
-              type="primary" @click="() => siderCollapsed = !siderCollapsed"
+              type="primary" @click="() => sideCollapsed = !sideCollapsed"
             >
               <template #icon>
                 <span
-                  :class="siderCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
+                  :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
                   class="anticon block text-base"
                 />
               </template>
@@ -266,8 +269,8 @@ const addPolygonToMap = () => {
       <div class="relative z-9 flex flex-nowrap overflow-hidden">
         <div class="block w-full top-0" :style="{ transform: `translateX(-${transitionNumber}%)` }">
           <DevicesList
-            ref="devicesListRef" :devices="devices" :devices-count="devicesCount"
-            :devices-loading="devicesLoading"
+            ref="devicesListRef" v-model:devices="devices" v-model:devices-count="devicesCount"
+            v-model:devices-loading="devicesLoading"
             @on-search-device="onSearchDevice"
             @device-clicked="deviceClicked" @on-load-more="onLoadMore"
             @show-details="(device) => {
@@ -294,7 +297,7 @@ const addPolygonToMap = () => {
           class="block w-full absolute top-0 h-full"
           :style="{ transform: `translateX(${-transitionNumber + 100}%)` }"
         >
-          <div v-if="siderCollapsed" class="h-full">
+          <div v-if="sideCollapsed" class="h-full">
             <div class="h-full">
               <div
                 class="flex items-center p-2 justify-center relative z-40 items-center justify-center font-semibold bg-light-500/90 backdrop-blur-sm ring-0 ring-slate-900/10 transition-all duration-100 shadow-sm"
@@ -321,7 +324,7 @@ const addPolygonToMap = () => {
                     </template>
                     <a-button
                       type="text" class="flex items-center justify-center mt-5 mx-auto"
-                      @click="siderCollapsed = false"
+                      @click="sideCollapsed = false"
                     >
                       <template #icon>
                         <span class="i-ph-arrow-line-right anticon block text-blue" />
@@ -386,11 +389,11 @@ const addPolygonToMap = () => {
             <a-button
               size="small"
               class="flex items-center justify-center mr-1" type="primary"
-              @click="() => (siderCollapsed = !siderCollapsed)"
+              @click="() => (sideCollapsed = !sideCollapsed)"
             >
               <template #icon>
                 <span
-                  :class="siderCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
+                  :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
                   class="anticon block text-sm"
                 />
               </template>
@@ -400,7 +403,7 @@ const addPolygonToMap = () => {
               class="flex items-center justify-center mr-1" type="primary" :disabled="!isSupported" @click="() => {
                 if (gmapRef) {
                   gmapRef.mapOptions.center = { lat: coords.latitude, lng: coords.longitude }
-                  gmapRef.mapOptions.zoom = 9
+                  gmapRef.mapOptions.zoom = 10
                 }
               }"
             >
@@ -419,7 +422,7 @@ const addPolygonToMap = () => {
             <a-button
               size="small"
               class="flex items-center justify-center mr-1" type="primary"
-              @click="() => (siderCollapsed = true)"
+              @click="() => (sideCollapsed = true)"
             >
               <template #icon>
                 <span class="i-carbon-circle-dash anticon block text-sm" />
@@ -428,7 +431,7 @@ const addPolygonToMap = () => {
             <a-button
               size="small"
               class="flex items-center justify-center mr-1" type="primary"
-              @click="() => {siderCollapsed = true; gmapRef.value?.addRectangle()}"
+              @click="() => {sideCollapsed = true; gmapRef.value?.addRectangle()}"
             >
               <template #icon>
                 <span class="i-carbon-center-square anticon block text-sm" />

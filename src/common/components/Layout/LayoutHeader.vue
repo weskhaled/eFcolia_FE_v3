@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { isDark, urlSearchParams } from '~/common/composables'
-import { currentUser, devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, siderCollapsed, token, treeDataClients } from '~/common/stores'
+import { currentUser, devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, sideCollapsed, token, treeDataClients } from '~/common/stores'
 
 const { t, availableLocales, locale } = useI18n()
 // const router = useRouter()
@@ -12,7 +12,7 @@ const { width } = useWindowSize()
     class="lyout-header header flex items-center drop-shadow-[0_0px_2px_rgba(0,0,0,0.15)] z-45 !h-55px !px-4"
     :class="isDark ? '!bg-[#001125]' : '!bg-white'">
     <div
-      :class="(!siderCollapsed && mdAndLarger) ? (urlSearchParams.showDeviceDetails ? '!w-[calc(60%-422px)]' : '!w-[calc(415px)]') : '!w-31.2'"
+      :class="(!sideCollapsed && mdAndLarger) ? (urlSearchParams.showDeviceDetails ? '!w-[calc(60%-422px)]' : '!w-[calc(415px)]') : '!w-31.2'"
       class="h-full ml-0 transition-all ease-out delay-0.2s flex items-center border-r-1 border-dark-100/5 dark:border-light-100/5">
       <a href="" class="inline-block mr-2" @click.prevent="$router.push({name: 'dashboard'})">
         <a-badge-ribbon class="!text-10px !-top-2.2 !rounded-2px">
@@ -57,8 +57,8 @@ const { width } = useWindowSize()
       </div>
     </div>
     <button class="p-2 hidden">
-      <span :class="siderCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
-        class="block text-lg text-gray-700" @click="() => (siderCollapsed = !siderCollapsed)" />
+      <span :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
+        class="block text-lg text-gray-700" @click="() => (sideCollapsed = !sideCollapsed)" />
     </button>
 
     <div class="ml-auto flex items-center h-full px-3">

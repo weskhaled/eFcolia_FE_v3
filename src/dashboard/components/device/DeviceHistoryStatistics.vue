@@ -4,7 +4,7 @@ import TimeSeries from 'fusioncharts/fusioncharts.timeseries'
 import ExcelExport from 'fusioncharts/fusioncharts.excelexport'
 import { promiseTimeout } from '@vueuse/core'
 import dayjs from 'dayjs'
-import { siderCollapsed } from '~/common/stores'
+import { sideCollapsed } from '~/common/stores'
 
 interface Props {
   dataHistories?: Ref<any>
@@ -81,7 +81,7 @@ const initChart = () => {
 //   initChart()
 // })
 
-watch([siderCollapsed, dataFormatter, chartRef], async() => {
+watch([sideCollapsed, dataFormatter, chartRef], async() => {
   if (dataFormatter.value.length && chartRef.value) {
     await nextTick()
     initChart()

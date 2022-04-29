@@ -3,7 +3,10 @@ import { vInfiniteScroll } from '@vueuse/components'
 import type { UseFuseOptions } from '@vueuse/integrations/useFuse'
 import { useFuse } from '@vueuse/integrations/useFuse'
 import { useVirtualList } from '@vueuse/core'
-import { mdAndLarger, siderCollapsed } from '~/common/stores'
+import { message } from 'ant-design-vue'
+
+import { selectedClient, sideCollapsed } from '~/common/stores'
+import service from '~/common/services/http'
 
 interface Props {
   devices?: Ref<any[]>
@@ -16,7 +19,8 @@ const props = withDefaults(defineProps<Props>(), {
   devicesCount: () => ref(0),
   devicesLoading: () => ref(false),
 })
-const emit = defineEmits(['deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'addNewDevice', 'updateDevice', 'onSearchDevice'])
+const emit = defineEmits(['update:devices', 'update:devicesCount', 'update:devicesLoading', 'deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'addNewDevice', 'updateDevice', 'onSearchDevice'])
+const { devices, devicesCount, devicesLoading } = useVModels(props, emit)
 
 const { t } = useI18n()
 
@@ -61,37 +65,58 @@ const options = computed<UseFuseOptions<any>>(() => ({
   matchAllWhenSearchEmpty: matchAllWhenSearchEmpty.value,
 }))
 
-const filteredList = computed(() => props.devices.filter(i => i.name))
+// const filteredList = computed(() => props.devices.filter(i => i.name))
 
 const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
-  filteredList,
+  devices,
   {
     itemHeight: 155,
     overscan: 10,
   },
 )
 
-const resultsFilteredDevices = ref([])
+const { results: resultsFilteredDevices } = useFuse(searchText, devices, options)
 
 watchDebounced(
   search,
-  (val) => {
-    emit('onSearchDevice', val)
+  async(val) => {
+    if (val.length > 4) {
+      // emit('onSearchDevice', val)
+      console.log(resultsFilteredDevices.value)
+      devicesLoading.value = true
+      // if (resultsFilteredDevices.value.length) {
+      //   const index = resultsFilteredDevices.value[0].refIndex
+      //   scrollTo(index)
+      // }
+      const { data } = await service.get(`api/device/byClientId/${selectedClient.value}/${search.value}`)
+      if (!data.length)
+        message.info('No devices founded')
+      if (resultsFilteredDevices.value.length === data.length) {
+        const index = resultsFilteredDevices.value[0]?.refIndex
+        index && scrollTo(index)
+      }
+      if (data && data.length > resultsFilteredDevices.value.length) {
+        devices.value = Array.from([...data, ...devices.value].reduce((p, c) => p.set(c.id, c), new Map()).values())
+        // devicesCount.value = data.length
+        containerProps?.ref?.value.scrollTo(0, 0)
+      }
+      devicesLoading.value = false
+    }
   },
-  { debounce: 500 },
+  { debounce: 300 },
 )
 defineExpose({ scrollTo, containerProps })
 </script>
 
 <template>
   <div
-    v-if="props.devicesLoading"
+    v-if="devicesLoading"
     class="w-full h-full bg-dark-500/10 z-44 items-center justify-center absolute top-0 left-0 pointer-events-auto flex"
   >
     <span class="i-ant-design-loading-outlined text-blue-800 dark:text-blue-200 text-2xl anticon-spin" />
   </div>
   <div
-    v-else-if="!props.devicesLoading && !props.devicesCount"
+    v-else-if="(!devicesLoading && !devicesCount)"
     class="w-full h-full bg-light-500/20 dark:bg-[#001125] transition-colors text-white z-44 items-center justify-center absolute top-0 left-0 pointer-events-auto flex"
   >
     <div>
@@ -109,16 +134,26 @@ defineExpose({ scrollTo, containerProps })
     >
       <div
         class="flex items-center"
-        :class="siderCollapsed ? 'h-10 w-12 rounded-full justify-center' : 'h-10 w-full justify-center'"
+        :class="sideCollapsed ? 'h-10 w-12 rounded-full justify-center' : 'h-10 w-full justify-center'"
       >
-        <div v-if="!siderCollapsed" class="flex flex-grow items-center mr-auto">
+        <div v-if="!sideCollapsed" class="flex flex-grow items-center mr-auto">
           <a-input-search
             v-model:value="search"
             allow-clear
-            placeholder="input search loading with enterButton" :loading="props.devicesLoading" :disabled="!search.length && props.devicesCount === 0"
+            placeholder="input search loading with enterButton" :loading="devicesLoading" :disabled="!search.length && devicesCount === 0"
             enter-button
             class="flex-grow max-w-full mr-2"
-          />
+          >
+            <template v-if="resultsFilteredDevices.length" #suffix>
+              <a-tooltip title="scroll to device">
+                <a-button type="link" size="small" @click="scrollTo(resultsFilteredDevices[0].refIndex)">
+                  <template #icon>
+                    <span class="i-carbon-auto-scroll anticon block text-sm text-opacity-10" />
+                  </template>
+                </a-button>
+              </a-tooltip>
+            </template>
+          </a-input-search>
         </div>
         <div>
           <a-dropdown>
@@ -158,9 +193,9 @@ defineExpose({ scrollTo, containerProps })
         v-for="{ index, data: item } in list"
         :id="`device-id-${item.id}`" :key="index" draggable="true"
         class="flex items-center h-155px p-1"
-        :class="[siderCollapsed ? 'justify-center' : 'justify-start', resultsFilteredDevices.length && !resultsFilteredDevices.map(r => r.refIndex).includes(index) ? 'opacity-35' : '!opacity-100']"
+        :class="[sideCollapsed ? 'justify-center' : 'justify-start', resultsFilteredDevices.length && !resultsFilteredDevices.map(r => r.refIndex).includes(index) ? 'opacity-35' : '!opacity-100']"
       >
-        <template v-if="siderCollapsed">
+        <template v-if="sideCollapsed">
           <a-tooltip :color="item.gprsstate === 1 ? 'green' : 'red'" placement="right">
             <template #title>
               <span>{{ `${item.name}` }}</span>

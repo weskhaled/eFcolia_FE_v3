@@ -160,8 +160,8 @@ const { t } = useI18n()
               <span>{{ props.device?.name }}</span>
             </template>
             <h2 class="text-lg mb-0 dark:text-light-400">
-              {{ `${props.device?.name}`.slice(0, 20) }}{{
-                `${props.device?.name}`.length > 20 ? '...' : null
+              {{ `${props.device?.name}`.slice(0, 23) }}{{
+                `${props.device?.name}`.length > 23 ? '...' : null
               }}
             </h2>
           </a-tooltip>
@@ -194,10 +194,10 @@ const { t } = useI18n()
           </div>
           <div class="ml-auto text-right">
             <div>
-              {{ props.device.latitude }}
+              {{ props.device.latitude || 'null' }}
             </div>
             <div>
-              {{ props.device.longitude }}
+              {{ props.device.longitude || 'null' }}
             </div>
           </div>
         </div>
