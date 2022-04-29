@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { rejects } from 'assert'
 import type Dayjs from 'dayjs'
 import dayjs from 'dayjs'
 import { TransitionPresets, useDateFormat, useNow, useTransition } from '@vueuse/core'
@@ -66,6 +67,30 @@ const onLoadMore = async() => {
     }
     devicesLoading.value = false
   }
+}
+const onSearchDevice = async(term: string) => {
+  devicesLoading.value = true
+  if (term.length > 3) {
+    try {
+      const { data } = await service.get(`api/device/byClientId/${selectedClient.value}/${term}`)
+      devices.value = data
+      devicesCount.value = data.length
+      devicesListRef.value?.containerProps?.ref?.value.scrollTo(0, 0)
+      devicesLoading.value = false
+    }
+    catch (error) {
+      console.log(error)
+    }
+  }
+  else {
+    const { data } = await service.get(`api/device/byClientId/${selectedClient.value}?skip=0`)
+
+    if (data) {
+      devices.value = Array.from([...devices.value, ...data.listDevice].reduce((p, c) => p.set(c.id, c), new Map()).values())
+      devicesCount.value = data.count
+    }
+  }
+  devicesLoading.value = false
 }
 watch([showDeviceDetails, activeKeyDeviceDetails], ([valShowDeviceDetails, valActiveKeyDeviceDetails]) => {
   urlSearchParams.showDeviceDetails = valShowDeviceDetails || null
@@ -242,7 +267,10 @@ const addPolygonToMap = () => {
         <div class="block w-full top-0" :style="{ transform: `translateX(-${transitionNumber}%)` }">
           <DevicesList
             ref="devicesListRef" :devices="devices" :devices-count="devicesCount"
-            :devices-loading="devicesLoading" @device-clicked="deviceClicked" @on-load-more="onLoadMore" @show-details="(device) => {
+            :devices-loading="devicesLoading"
+            @on-search-device="onSearchDevice"
+            @device-clicked="deviceClicked" @on-load-more="onLoadMore"
+            @show-details="(device) => {
               selectedDevice = device;
               showDeviceDetails = true;
               activeKeyDeviceDetails = 'details'

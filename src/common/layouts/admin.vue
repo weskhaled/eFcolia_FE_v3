@@ -39,31 +39,36 @@ watch(
 </template>
 <style lang="less">
 .ant-menu.ant-menu-vertical.ant-menu-root {
-  > .ant-menu-item,
+
+  >.ant-menu-item,
   .ant-menu-submenu.ant-menu-submenu-vertical,
-  .ant-menu-vertical .ant-menu-submenu-title {
+  .ant-menu-vertical .ant-menu-submenu-title,
+  .ant-menu-vertical>.ant-menu-submenu>.ant-menu-submenu-title {
     &:first-child {
       @apply mt-0;
     }
-    height: 55px;
-    line-height: 55px;
+
+    @apply  !h-55px !leading-55px;
   }
 }
-.ant-menu-vertical > .ant-menu-submenu > .ant-menu-submenu-title {
-  height: 55px;
-  line-height: 55px;
+
+.ant-menu-vertical>.ant-menu-submenu>.ant-menu-submenu-title {
+  @apply  !h-55px !leading-55px;
 }
+
 .ant-tooltip.ant-menu-inline-collapsed-tooltip {
   .ant-tooltip-inner {
-    > span {
+    >span {
       @apply flex items-center;
     }
+
     .anticon {
       @apply mr-1;
     }
   }
 }
+
 .ant-tabs-nav {
-  @apply !mb-0;
+  @apply  !mb-0;
 }
 </style>

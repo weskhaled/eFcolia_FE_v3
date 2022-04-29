@@ -20,12 +20,12 @@ useHead({
 const {
   load,
   unload,
-} = useStyleTag(`@import 'https://unpkg.com/ant-design-vue@3.2.1/dist/antd.dark.css';`)
+} = useStyleTag('@import \'https://unpkg.com/ant-design-vue@3.2.2/dist/antd.dark.css\';')
 
 watch(isDark, (value) => {
   value ? load() : unload()
 }, {
-  immediate: true
+  immediate: true,
 })
 const { locale } = useI18n()
 

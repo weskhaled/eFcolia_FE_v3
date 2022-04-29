@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { vInfiniteScroll } from '@vueuse/components'
-import { useFuse, UseFuseOptions } from '@vueuse/integrations/useFuse'
+import type { UseFuseOptions } from '@vueuse/integrations/useFuse'
+import { useFuse } from '@vueuse/integrations/useFuse'
 import { useVirtualList } from '@vueuse/core'
 import { mdAndLarger, siderCollapsed } from '~/common/stores'
 
@@ -15,12 +16,13 @@ const props = withDefaults(defineProps<Props>(), {
   devicesCount: () => ref(0),
   devicesLoading: () => ref(false),
 })
-const emit = defineEmits(['deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'addNewDevice', 'updateDevice'])
+const emit = defineEmits(['deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'addNewDevice', 'updateDevice', 'onSearchDevice'])
 
 const { t } = useI18n()
 
 const search = ref('')
-const filterBy = ref('name')
+const searchText = computed(() => `'${search.value}`)
+const filterBy = ref('both')
 const keys = computed(() => {
   if (filterBy.value === 'name')
     return ['name']
@@ -42,16 +44,16 @@ watch(resultLimitString, () => {
     }
   }
 })
-const exactMatch = ref(false)
+const exactMatch = ref(true)
 const isCaseSensitive = ref(false)
 const matchAllWhenSearchEmpty = ref(false)
-const options = computed<any>(() => ({
+const options = computed<UseFuseOptions<any>>(() => ({
   fuseOptions: {
     keys: keys.value,
     isCaseSensitive: isCaseSensitive.value,
     threshold: exactMatch.value ? 0 : undefined,
     includeMatches: false,
-    minMatchCharLength: 3,
+    minMatchCharLength: 4,
     findAllMatches: false,
     useExtendedSearch: true,
   },
@@ -68,14 +70,16 @@ const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
     overscan: 10,
   },
 )
-const { results } = useFuse(search, filteredList , options)
-watch(results, () => {
-  console.log(results.value)
-  if(search.length > 3) {
-    console.log(search)
-    console.log(results)
-  }
-})
+
+const resultsFilteredDevices = ref([])
+
+watchDebounced(
+  search,
+  (val) => {
+    emit('onSearchDevice', val)
+  },
+  { debounce: 500 },
+)
 defineExpose({ scrollTo, containerProps })
 </script>
 
@@ -109,10 +113,11 @@ defineExpose({ scrollTo, containerProps })
       >
         <div v-if="!siderCollapsed" class="flex flex-grow items-center mr-auto">
           <a-input-search
-            placeholder="input search loading with enterButton"
-            :loading="props.devicesLoading" :disabled="props.devicesCount === 0" enter-button
-            class="flex-grow max-w-full mr-2"
             v-model:value="search"
+            allow-clear
+            placeholder="input search loading with enterButton" :loading="props.devicesLoading" :disabled="!search.length && props.devicesCount === 0"
+            enter-button
+            class="flex-grow max-w-full mr-2"
           />
         </div>
         <div>
@@ -152,7 +157,8 @@ defineExpose({ scrollTo, containerProps })
       <div
         v-for="{ index, data: item } in list"
         :id="`device-id-${item.id}`" :key="index" draggable="true"
-        class="flex items-center h-155px p-1" :class="siderCollapsed ? 'justify-center' : 'justify-start'"
+        class="flex items-center h-155px p-1"
+        :class="[siderCollapsed ? 'justify-center' : 'justify-start', resultsFilteredDevices.length && !resultsFilteredDevices.map(r => r.refIndex).includes(index) ? 'opacity-35' : '!opacity-100']"
       >
         <template v-if="siderCollapsed">
           <a-tooltip :color="item.gprsstate === 1 ? 'green' : 'red'" placement="right">
@@ -167,7 +173,7 @@ defineExpose({ scrollTo, containerProps })
             >
               <span
                 v-if="item.selected"
-                class="i-ant-design-caret-left-filled text-sm absolute -right-1.3 top-4 block ease-in duration-100 transition-all text-white"
+                class="i-ant-design-caret-left-filled text-sm absolute -right-1.3 top-4 block ease-in duration-100 transition-all text-white dark:text-blue-gray-800"
               />
               <a-badge
                 :text="false" :status="item.gprsstate === 1 ? 'success' : 'error'"

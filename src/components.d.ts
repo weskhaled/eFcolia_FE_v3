@@ -17,7 +17,6 @@ declare module 'vue' {
     AForm: typeof import('ant-design-vue/es')['Form']
     AFormItem: typeof import('ant-design-vue/es')['FormItem']
     AInput: typeof import('ant-design-vue/es')['Input']
-    AInputPassword: typeof import('ant-design-vue/es')['InputPassword']
     AInputSearch: typeof import('ant-design-vue/es')['InputSearch']
     ALayout: typeof import('ant-design-vue/es')['Layout']
     ALayoutContent: typeof import('ant-design-vue/es')['LayoutContent']
@@ -45,8 +44,8 @@ declare module 'vue' {
     DevicesMap: typeof import('./dashboard/components/DevicesMap.vue')['default']
     Footer: typeof import('./common/components/Footer.vue')['default']
     GMapDevices: typeof import('./dashboard/components/GMapDevices.vue')['default']
-    LayoutHeader: typeof import('./common/components/ayout/LayoutHeader.vue')['default']
-    LayoutSider: typeof import('./common/components/ayout/LayoutSider.vue')['default']
+    LayoutHeader: typeof import('./common/components/Layout/LayoutHeader.vue')['default']
+    LayoutSider: typeof import('./common/components/Layout/LayoutSider.vue')['default']
     Map: typeof import('./common/components/Map.vue')['default']
     README: typeof import('./common/components/README.md')['default']
   }

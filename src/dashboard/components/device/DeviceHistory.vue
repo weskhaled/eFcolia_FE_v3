@@ -175,7 +175,7 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
         pageSize: 100,
         showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
       }" :columns="columnsDeviceHistories.filter(col => !col.isHidden)" :data-source="props.dataHistories || []"
-      :scroll="{ x: columnsDeviceHistories.filter(col => !col.isHidden).length > 7 ? 3500 : 1000, y: height - 97 }"
+      :scroll="{ x: columnsDeviceHistories.filter(col => !col.isHidden).length > 7 ? 3500 : 1000, y: height - 81 }"
     >
       <template #headerCell="{ column }">
         <template v-if="column.key === 'operation'">
@@ -230,8 +230,7 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
 </template>
 <style lang="less">
 .ant-table-pagination.ant-pagination {
-  margin: 0;
-  padding: 0.5rem;
+  @apply !m-0 !p-0.5rem;
 }
 
 // .ant-table-placeholder {
