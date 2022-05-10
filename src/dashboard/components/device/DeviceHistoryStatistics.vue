@@ -93,7 +93,7 @@ defineExpose({ chart })
 </script>
 
 <template>
-  <div ref="wrapperTableStatsRef" class="min-h-full bg-white pt-2 relative">
+  <div ref="wrapperTableStatsRef" class="min-h-full bg-white dark:bg-dark-700 pt-2 relative">
     <div ref="chartRef" :class="(!dataFormatter.length || !props.dataHistories) && 'hidden'" />
     <a-result v-if="!dataFormatter.length" title="No statistics" sub-title="Sorry, this device have no statistics">
       <template #icon>

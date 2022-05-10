@@ -2,6 +2,7 @@
 import { getCurrentInstance } from 'vue'
 import dayjs from 'dayjs'
 import { Form } from 'ant-design-vue'
+import { selectedClient } from '~/common/stores'
 
 const { setupContext } = getCurrentInstance()
 interface Props {
@@ -76,7 +77,8 @@ watch(() => props.device, () => {
         </a-form-item>
         <a-form-item label="Client" v-bind="validateInfos.clientId">
           <a-tree-select
-            v-model:value="modelRef.clientId" show-search class="w-full md:min-w-70"
+            v-model:value="modelRef.clientId"
+            :default-value="selectedClient" show-search class="w-full md:min-w-70"
             tree-node-filter-prop="title" :tree-default-expanded-keys="[1]"
             :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }" placeholder="Please select a client"
             :tree-default-expand-all="false" tree-data-simple-mode :disabled="!clients" :tree-data="clients || []"

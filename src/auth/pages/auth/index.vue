@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import service from '~/common/services/http'
+// import service from '~/common/services/http'
 import { token } from '~/common/stores'
+import { api as apiServices } from '~/common/composables'
+import { message } from 'ant-design-vue';
 
 const router = useRouter()
 const { t } = useI18n()
@@ -20,10 +22,10 @@ const formState = reactive<FormState>({
 })
 const onFinish = async(values: any) => {
   loginLoading.value = true
-  const { data } = await service.post('/api/auth/login', values)
+  const { data, error } = await apiServices('/api/auth/login').post(values).json()
 
-  if (data) {
-    token.value = data.token
+  if (data.value && !error.value) {
+    token.value = data.value.token
     router.push({ name: 'dashboard' })
   }
 

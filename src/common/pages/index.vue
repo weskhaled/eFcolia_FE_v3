@@ -2,8 +2,6 @@
 import { h } from 'vue'
 import { get } from '@vueuse/core'
 import { GoogleMap, Marker } from 'vue3-google-map'
-// import 'leaflet/dist/leaflet.css'
-// import { map, marker, tileLayer } from 'leaflet'
 import { useUserStore } from '../../hi/stores/user'
 
 onMounted(() => router.push('/auth'))
@@ -74,9 +72,6 @@ const center = { lat: 40.689247, lng: -74.044502 }
 <style>
 #map {
   height: 380px;
-}
-.leaflet-popup-content {
-  /* @apply !w-auto; */
 }
 </style>
 <route lang="yaml">

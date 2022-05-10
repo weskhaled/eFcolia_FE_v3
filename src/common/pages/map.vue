@@ -77,9 +77,6 @@ const onMapClick = (e) => {
 #map {
   height: 380px;
 }
-.leaflet-popup-content {
-  /* @apply !w-auto; */
-}
 .custom-btn {
   box-sizing: border-box;
   background: white;

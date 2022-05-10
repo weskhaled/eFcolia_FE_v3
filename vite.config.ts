@@ -159,7 +159,7 @@ export default defineConfig({
     script: 'async',
     formatting: 'minify',
     onFinished() { generateSitemap() },
-    format: 'esm',
+    format: 'cjs',
   },
 
   optimizeDeps: {

@@ -16,7 +16,7 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="p-2 flex flex-col justify-between min-h-full">
+  <div class="p-2 flex flex-col justify-between min-h-full dark:bg-dark-700">
     <a-descriptions title="Device Details:" class="!dark:text-light-50">
       <a-descriptions-item label="Name">
         {{ device?.name }}

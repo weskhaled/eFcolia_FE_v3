@@ -6,7 +6,8 @@ import { useVirtualList } from '@vueuse/core'
 import { message } from 'ant-design-vue'
 
 import { selectedClient, sideCollapsed } from '~/common/stores'
-import service from '~/common/services/http'
+// import service from '~/common/services/http'
+import { api as apiServices } from '~/common/composables'
 
 interface Props {
   devices?: Ref<any[]>
@@ -82,21 +83,22 @@ watchDebounced(
   async(val) => {
     if (val.length > 4) {
       // emit('onSearchDevice', val)
-      console.log(resultsFilteredDevices.value)
+      // console.log(resultsFilteredDevices.value)
       devicesLoading.value = true
       // if (resultsFilteredDevices.value.length) {
       //   const index = resultsFilteredDevices.value[0].refIndex
       //   scrollTo(index)
       // }
-      const { data } = await service.get(`api/device/byClientId/${selectedClient.value}/${search.value}`)
-      if (!data.length)
+      const { data } = await apiServices(`api/device/byClientId/${selectedClient.value}/${search.value}`).get().json()
+      const devicesData: any = unref(data)
+      if (!devicesData.length)
         message.info('No devices founded')
-      if (resultsFilteredDevices.value.length === data.length) {
+      if (resultsFilteredDevices.value.length === devicesData.length) {
         const index = resultsFilteredDevices.value[0]?.refIndex
         index && scrollTo(index)
       }
-      if (data && data.length > resultsFilteredDevices.value.length) {
-        devices.value = Array.from([...data, ...devices.value].reduce((p, c) => p.set(c.id, c), new Map()).values())
+      if (devicesData && devicesData.length > resultsFilteredDevices.value.length) {
+        devices.value = Array.from([...devicesData, ...devices.value].reduce((p, c) => p.set(c.id, c), new Map()).values())
         // devicesCount.value = data.length
         containerProps?.ref?.value.scrollTo(0, 0)
       }

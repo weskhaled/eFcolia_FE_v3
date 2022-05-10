@@ -18,7 +18,7 @@ const codeMessageMap: codeMessageMapTypes = {
 }
 
 const showCodeMessage = (code: number | string): string => {
-  return codeMessageMap[JSON.stringify(code)] || 'The network connection is abnormal, please try again later!'
+  return codeMessageMap[`${code}`] || 'The network connection is abnormal, please try again later!'
 }
 
 export default showCodeMessage

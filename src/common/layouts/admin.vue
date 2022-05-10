@@ -1,24 +1,28 @@
 <script setup lang="ts">
-import service from '~/common/services/http'
+// import service from '~/common/services/http'
+import { api as apiServices } from '~/common/composables'
 import { currentUser, isAuthenticated, selectedClient, treeDataClients } from '~/common/stores'
 import { urlSearchParams } from '~/common/composables'
 
 const router = useRouter()
 
-onMounted(async() => {
-  const { data: dataUser } = await service.get('/api/request/user')
+onMounted(async () => {
+  const { data: dataUser, error } = await apiServices('/api/request/user').get().json()
 
-  dataUser && (currentUser.value = dataUser)
+  if (error.value) {
+    await router.push('/auth')
+  } else if (dataUser.value) {
+    currentUser.value = dataUser.value
+    const { data: DataClients } = await apiServices('/api/client').get().json()
 
-  const { data: DataClients } = await service.get('/api/client')
-
-  DataClients && (treeDataClients.value = DataClients)
-  selectedClient.value = urlSearchParams.clientId || currentUser.value?.client_id
+    DataClients.value && (treeDataClients.value = DataClients.value)
+    selectedClient.value = urlSearchParams.clientId || currentUser.value?.client_id
+  }
 })
 
 watch(
   isAuthenticated,
-  async(value: any) => {
+  async (value: any) => {
     if (!value)
       await router.push('/auth')
   },

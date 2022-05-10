@@ -2,11 +2,10 @@
 import { rejects } from 'assert'
 import type Dayjs from 'dayjs'
 import dayjs from 'dayjs'
-import { TransitionPresets, useDateFormat, useNow, useTransition } from '@vueuse/core'
+import { TransitionPresets, useTransition } from '@vueuse/core'
 
 import { devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, selectedDevice, sideCollapsed, treeDataClients } from '~/common/stores'
-import { urlSearchParams } from '~/common/composables'
-import service from '~/common/services/http'
+import { api as apiServices, urlSearchParams } from '~/common/composables'
 
 const router = useRouter()
 const { t } = useI18n()
@@ -16,6 +15,7 @@ const { coords, isSupported } = useGeolocation()
 const [asideCollapsed, toggleAsideCollapsed] = useToggle()
 
 const visibleDeviceFormModal = ref(false)
+const interval = ref(50000)
 const activeKeyDeviceDetails = ref('details')
 const showDeviceDetails = ref(false)
 const baseNumber = computed(() => showDeviceDetails.value && selectedDevice.value ? 100 : 0)
@@ -33,6 +33,16 @@ const gmapRef = ref(null)
 const positionMapTools = useStorage('position-map-tools', { x: 10, y: 10 })
 const mapContainerRef = ref(null)
 const { elementX, elementY, isOutside } = useMouseInElement(mapContainerRef)
+
+const { pause, resume, isActive } = useIntervalFn(async() => {
+  if (!selectedClient.value)
+    return
+  const { data } = await apiServices(`/api/device/synchro/${selectedClient.value}`).get().json()
+
+  const devicesData: any = unref(data)
+  if (devicesData)
+    devices.value = Array.from([...devices.value, ...devicesData].reduce((p, c) => p.set(c.id, c), new Map()).values())
+}, interval)
 
 const markerClicked = (deviceId) => {
   devices.value.filter(d => d.id !== deviceId).map(d => d.selected = false)
@@ -56,25 +66,31 @@ const markerClicked = (deviceId) => {
   }
 }
 const onLoadMore = async() => {
+  pause()
   const length = devices.value.length
   if (length < devicesCount.value - 1) {
     devicesLoading.value = true
-    const { data } = await service.get(`api/device/byClientId/${selectedClient.value}?skip=${length}`)
+    const { data } = await apiServices(`api/device/byClientId/${selectedClient.value}?skip=${length}`).get().json()
 
-    if (data) {
-      devices.value = Array.from([...devices.value, ...data.listDevice].reduce((p, c) => p.set(c.id, c), new Map()).values())
-      devicesCount.value = data.count
+    const devicesData: any = unref(data)
+    if (devicesData) {
+      devices.value = Array.from([...devices.value, ...devicesData.listDevice].reduce((p, c) => p.set(c.id, c), new Map()).values())
+      devicesCount.value = devicesData.count
     }
     devicesLoading.value = false
   }
+  resume()
 }
+
 const onSearchDevice = async(term: string) => {
+  pause()
   devicesLoading.value = true
   if (term.length > 3) {
     try {
-      const { data } = await service.get(`api/device/byClientId/${selectedClient.value}/${term}`)
-      devices.value = data
-      devicesCount.value = data.length
+      const { data } = await apiServices(`api/device/byClientId/${selectedClient.value}/${term}`).get().json()
+      const devicesData: any = unref(data)
+      devices.value = devicesData
+      devicesCount.value = devicesData.length
       devicesListRef.value?.containerProps?.ref?.value.scrollTo(0, 0)
       devicesLoading.value = false
     }
@@ -83,14 +99,16 @@ const onSearchDevice = async(term: string) => {
     }
   }
   else {
-    const { data } = await service.get(`api/device/byClientId/${selectedClient.value}?skip=0`)
+    const { data } = await apiServices(`api/device/byClientId/${selectedClient.value}?skip=0`).get().json()
 
-    if (data) {
-      devices.value = Array.from([...devices.value, ...data.listDevice].reduce((p, c) => p.set(c.id, c), new Map()).values())
-      devicesCount.value = data.count
+    const devicesData: any = unref(data)
+    if (devicesData) {
+      devices.value = Array.from([...devices.value, ...devicesData.listDevice].reduce((p, c) => p.set(c.id, c), new Map()).values())
+      devicesCount.value = devicesData.count
     }
   }
   devicesLoading.value = false
+  resume()
 }
 watch([showDeviceDetails, activeKeyDeviceDetails], ([valShowDeviceDetails, valActiveKeyDeviceDetails]) => {
   urlSearchParams.showDeviceDetails = valShowDeviceDetails || null
@@ -108,9 +126,9 @@ watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async() => {
   }
   if (selectedDevice.value && showDeviceDetails.value) {
     dataHistories.value = null
-    const { data } = await service.get(`/api/history/${selectedDevice.value.id}?from=${from}&to=${to}`)
+    const { data } = await apiServices(`/api/history/${selectedDevice.value.id}?from=${from}&to=${to}`).get().json()
 
-    data && (dataHistories.value = data)
+    data.value && (dataHistories.value = data.value)
   }
 })
 watch(selectedClient, async(val) => {
@@ -123,11 +141,11 @@ watch(selectedClient, async(val) => {
   devicesLoading.value = true
   showDeviceDetails.value = false
   selectedDevice.value = null
-  const { data } = await service.get(`api/device/byClientId/${val}?skip=0`)
-
-  if (data) {
-    devices.value = data.listDevice
-    devicesCount.value = data.count
+  const { data } = await apiServices(`api/device/byClientId/${val}?skip=0`).get().json()
+  const devicesData: any = unref(data)
+  if (devicesData) {
+    devices.value = devicesData.listDevice
+    devicesCount.value = devicesData.count
   }
   if (urlSearchParams.deviceId) {
     // const { data: dataDevice } = await service.get(`/api/device/byClientId/${val}/${+urlSearchParams.deviceId}`)
@@ -177,12 +195,7 @@ const deviceClicked = (deviceCard) => {
     }
   }
 }
-const addPolygonToMap = () => {
-  const { map, api } = gmapRef.value
-  const { lat, lng } = map.getCenter()
-  console.log(api)
-  console.log(lat(), lng())
-}
+
 </script>
 
 <template>
@@ -270,24 +283,19 @@ const addPolygonToMap = () => {
         <div class="block w-full top-0" :style="{ transform: `translateX(-${transitionNumber}%)` }">
           <DevicesList
             ref="devicesListRef" v-model:devices="devices" v-model:devices-count="devicesCount"
-            v-model:devices-loading="devicesLoading"
-            @on-search-device="onSearchDevice"
-            @device-clicked="deviceClicked" @on-load-more="onLoadMore"
-            @show-details="(device) => {
+            v-model:devices-loading="devicesLoading" @on-search-device="onSearchDevice" @device-clicked="deviceClicked"
+            @on-load-more="onLoadMore" @show-details="(device) => {
               selectedDevice = device;
               showDeviceDetails = true;
               activeKeyDeviceDetails = 'details'
-            }"
-            @show-history="(device) => {
+            }" @show-history="(device) => {
               selectedDevice = device;
               showDeviceDetails = true;
               activeKeyDeviceDetails = 'histories'
-            }"
-            @update-device="(device) => {
+            }" @update-device="(device) => {
               selectedDevice = device;
               visibleDeviceFormModal = true;
-            }"
-            @add-new-device="() => {
+            }" @add-new-device="() => {
               selectedDevice = null;
               visibleDeviceFormModal = true;
             }"
@@ -376,7 +384,8 @@ const addPolygonToMap = () => {
       <div ref="mapContainerRef" class="overflow-hidden !h-full !w-full relative">
         <div class="w-full h-full">
           <GMapDevices
-            ref="gmapRef" :selected-device="selectedDevice" :devices="devices.filter(d => d.latitude && d.longitude)" class="h-full w-full"
+            ref="gmapRef" :selected-device="selectedDevice"
+            :devices="devices.filter(d => d.latitude && d.longitude)" class="h-full w-full"
             @marker-clicked="markerClicked"
           />
         </div>
@@ -387,8 +396,7 @@ const addPolygonToMap = () => {
         >
           <div class="min-w-35 p-3 bg-white flex">
             <a-button
-              size="small"
-              class="flex items-center justify-center mr-1" type="primary"
+              size="small" class="flex items-center justify-center mr-1" type="primary"
               @click="() => (sideCollapsed = !sideCollapsed)"
             >
               <template #icon>
@@ -399,8 +407,8 @@ const addPolygonToMap = () => {
               </template>
             </a-button>
             <a-button
-              size="small"
-              class="flex items-center justify-center mr-1" type="primary" :disabled="!isSupported" @click="() => {
+              size="small" class="flex items-center justify-center mr-1" type="primary" :disabled="!isSupported"
+              @click="() => {
                 if (gmapRef) {
                   gmapRef.mapOptions.center = { lat: coords.latitude, lng: coords.longitude }
                   gmapRef.mapOptions.zoom = 10
@@ -411,17 +419,13 @@ const addPolygonToMap = () => {
                 <span class="i-carbon-airport-location anticon block text-sm" />
               </template>
             </a-button>
-            <a-button
-              size="small"
-              class="flex items-center justify-center mr-1" type="primary"
-            >
+            <a-button size="small" class="flex items-center justify-center mr-1" type="primary">
               <template #icon>
                 <span class="i-carbon-area-custom anticon block text-sm" />
               </template>
             </a-button>
             <a-button
-              size="small"
-              class="flex items-center justify-center mr-1" type="primary"
+              size="small" class="flex items-center justify-center mr-1" type="primary"
               @click="() => (sideCollapsed = true)"
             >
               <template #icon>
@@ -429,9 +433,8 @@ const addPolygonToMap = () => {
               </template>
             </a-button>
             <a-button
-              size="small"
-              class="flex items-center justify-center mr-1" type="primary"
-              @click="() => {sideCollapsed = true; gmapRef.value?.addRectangle()}"
+              size="small" class="flex items-center justify-center mr-1" type="primary"
+              @click="() => { sideCollapsed = true; gmapRef.value?.addRectangle() }"
             >
               <template #icon>
                 <span class="i-carbon-center-square anticon block text-sm" />
@@ -439,7 +442,10 @@ const addPolygonToMap = () => {
             </a-button>
             <a-button size="small" class="flex items-center justify-center" type="primary" @click="toggleFullScreen">
               <template #icon>
-                <span class="anticon block text-sm" :class="isFullscreen ? 'i-ant-design-fullscreen-exit-outlined' : 'i-ant-design-fullscreen-outlined'" />
+                <span
+                  class="anticon block text-sm"
+                  :class="isFullscreen ? 'i-ant-design-fullscreen-exit-outlined' : 'i-ant-design-fullscreen-outlined'"
+                />
               </template>
             </a-button>
           </div>
@@ -459,7 +465,7 @@ const addPolygonToMap = () => {
       </div>
     </a-layout-content>
   </div>
-  <DeviceFormModal v-model:visible="visibleDeviceFormModal" :device="selectedDevice" :clients="treeDataClients" />
+  <DeviceFormModal v-model:visible="visibleDeviceFormModal" :selected-client="selectedClient" :device="selectedDevice" :clients="treeDataClients" />
 </template>
 <style lang="less">
 .vue-map-container {
@@ -469,7 +475,7 @@ const addPolygonToMap = () => {
 
 .device-history-table {
   .ant-tabs-nav {
-    @apply bg-zinc-100 dark:bg-dark-500;
+    @apply bg-zinc-100 dark: bg-dark-500;
   }
 
   .ant-tabs-content {
