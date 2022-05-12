@@ -20,3 +20,5 @@ common:
     list: list des boitier
     notFound: 0 boitier pour ce client
   client: client
+  add: Ajouter
+  update: Modifier

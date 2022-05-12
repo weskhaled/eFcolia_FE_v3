@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { rejects } from 'assert'
 import type Dayjs from 'dayjs'
 import dayjs from 'dayjs'
+import { Modal, message } from 'ant-design-vue'
 import { TransitionPresets, useTransition } from '@vueuse/core'
 
 import { devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, selectedDevice, sideCollapsed, treeDataClients } from '~/common/stores'
@@ -41,7 +41,7 @@ const { pause, resume, isActive } = useIntervalFn(async() => {
 
   const devicesData: any = unref(data)
   if (devicesData)
-    devices.value = Array.from([...devices.value, ...devicesData].reduce((p, c) => p.set(c.id, c), new Map()).values())
+    devices.value = Array.from([...devices.value, ...devicesData].filter(d => d).reduce((p, c) => p.set(c.id, c), new Map()).values())
 }, interval)
 
 const markerClicked = (deviceId) => {
@@ -65,16 +65,17 @@ const markerClicked = (deviceId) => {
     showDeviceDetails.value = false
   }
 }
-const onLoadMore = async() => {
+
+const onLoadMore = async(refresh = false) => {
   pause()
   const length = devices.value.length
   if (length < devicesCount.value - 1) {
     devicesLoading.value = true
-    const { data } = await apiServices(`api/device/byClientId/${selectedClient.value}?skip=${length}`).get().json()
+    const { data } = await apiServices(`api/device/byClientId/${selectedClient.value}?skip=${refresh ? ~~Math.max(0, length - 20) : length}`).get().json()
 
     const devicesData: any = unref(data)
     if (devicesData) {
-      devices.value = Array.from([...devices.value, ...devicesData.listDevice].reduce((p, c) => p.set(c.id, c), new Map()).values())
+      devices.value = Array.from([...devices.value, ...devicesData.listDevice].filter(d => d).reduce((p, c) => p.set(c.id, c), new Map()).values())
       devicesCount.value = devicesData.count
     }
     devicesLoading.value = false
@@ -110,10 +111,12 @@ const onSearchDevice = async(term: string) => {
   devicesLoading.value = false
   resume()
 }
+
 watch([showDeviceDetails, activeKeyDeviceDetails], ([valShowDeviceDetails, valActiveKeyDeviceDetails]) => {
   urlSearchParams.showDeviceDetails = valShowDeviceDetails || null
   urlSearchParams.activeKeyDeviceDetails = valActiveKeyDeviceDetails || null
 })
+
 watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async() => {
   urlSearchParams.deviceId = selectedDevice.value?.id || null
 
@@ -131,7 +134,11 @@ watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async() => {
     data.value && (dataHistories.value = data.value)
   }
 })
+
 watch(selectedClient, async(val) => {
+  if (!val)
+    return
+
   urlSearchParams.clientId = val || null
 
   if (devicesListRef.value) {
@@ -171,7 +178,8 @@ watch(selectedClient, async(val) => {
   }
 
   devicesLoading.value = false
-})
+}, { immediate: true })
+
 const deviceClicked = (deviceCard) => {
   devices.value.filter(d => d.id !== deviceCard.id).map(d => d.selected = false)
   const device = devices.value.find(d => d.id === deviceCard.id)
@@ -196,6 +204,23 @@ const deviceClicked = (deviceCard) => {
   }
 }
 
+const deleteDevice = (device) => {
+  const { id: deviceId, name } = device
+  const deviceIndex = devices.value.findIndex(d => d.id === deviceId)
+
+  Modal.confirm({
+    title: h('span', ['Do you want to delete these items? ', h('br'), h('span', { style: 'font-weight: 100;' }, name)]),
+    icon: h('span', { class: 'i-ant-design-exclamation-circle-outlined anticon mr-1' }),
+    content: 'When clicked the OK button, this device will removed',
+    onOk() {
+      pause()
+      return apiServices(`/api/device/${deviceId}`, { immediate: false }).delete().execute().then(() => deviceIndex && (delete devices.value[deviceIndex])).catch(error => message.error(error)).finally(() => { onLoadMore(true); resume() })
+    },
+    cancelText: 'Cancel',
+    onCancel() {
+    },
+  })
+}
 </script>
 
 <template>
@@ -298,7 +323,7 @@ const deviceClicked = (deviceCard) => {
             }" @add-new-device="() => {
               selectedDevice = null;
               visibleDeviceFormModal = true;
-            }"
+            }" @delete-device="deleteDevice"
           />
         </div>
         <div
@@ -465,7 +490,10 @@ const deviceClicked = (deviceCard) => {
       </div>
     </a-layout-content>
   </div>
-  <DeviceFormModal v-model:visible="visibleDeviceFormModal" :selected-client="selectedClient" :device="selectedDevice" :clients="treeDataClients" />
+  <DeviceFormModal
+    v-model:visible="visibleDeviceFormModal" :selected-client="selectedClient" :device="selectedDevice"
+    :clients="treeDataClients"
+  />
 </template>
 <style lang="less">
 .vue-map-container {
@@ -475,7 +503,7 @@ const deviceClicked = (deviceCard) => {
 
 .device-history-table {
   .ant-tabs-nav {
-    @apply bg-zinc-100 dark: bg-dark-500;
+    @apply bg-zinc-100 dark:bg-dark-500;
   }
 
   .ant-tabs-content {

@@ -6,12 +6,13 @@ import { urlSearchParams } from '~/common/composables'
 
 const router = useRouter()
 
-onMounted(async () => {
+onMounted(async() => {
   const { data: dataUser, error } = await apiServices('/api/request/user').get().json()
 
   if (error.value) {
     await router.push('/auth')
-  } else if (dataUser.value) {
+  }
+  else if (dataUser.value) {
     currentUser.value = dataUser.value
     const { data: DataClients } = await apiServices('/api/client').get().json()
 
@@ -22,7 +23,7 @@ onMounted(async () => {
 
 watch(
   isAuthenticated,
-  async (value: any) => {
+  async(value: any) => {
     if (!value)
       await router.push('/auth')
   },

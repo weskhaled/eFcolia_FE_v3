@@ -18,13 +18,13 @@ const openKeySider = ref<string[]>(['sub1'])
       :style="{ height: '100%' }"
       class="!dark:border-r-1px !dark:border-white/5"
     >
-      <a-menu-item key="1">
+      <a-menu-item key="1" @click="$router.push({name: 'dashboard'})">
         <span class>
           <span class="i-ph-car-duotone inline-block anticon text-lg" />
           <span>Devices List</span>
         </span>
       </a-menu-item>
-      <a-menu-item key="2">
+      <a-menu-item key="2" @click="$router.push({name: 'dashboard-alerts'})">
         <span class>
           <span class="i-ant-design-alert-twotone inline-block anticon text-lg" />
           <span>Alert</span>

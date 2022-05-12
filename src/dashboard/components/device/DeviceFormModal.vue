@@ -92,7 +92,7 @@ watch(() => props.device, () => {
       </div>
     </a-form>
     <template #footer>
-      <a-form-item class="m-0">
+      <a-form-item class="!mb-0">
         <a-button type="primary" danger @click="resetForm">
           Reset
         </a-button>

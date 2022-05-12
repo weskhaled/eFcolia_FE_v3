@@ -8,7 +8,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   device: () => ref(null),
 })
-const emit = defineEmits(['click', 'showDetails', 'showHistory', 'showStatistics', 'update'])
+const emit = defineEmits(['click', 'showDetails', 'showHistory', 'showStatistics', 'update', 'delete'])
 
 const { t } = useI18n()
 
@@ -140,7 +140,7 @@ const { t } = useI18n()
                   <span>Modifier device</span>
                 </span>
               </a-menu-item>
-              <a-menu-item>
+              <a-menu-item @click="() => emit('delete')">
                 <span class="flex items-center leading-6">
                   <span class="i-ph-x-duotone anticon text-red-600 mr-1" />
                   <span>Supprimer device</span>

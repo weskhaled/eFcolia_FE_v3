@@ -5,6 +5,8 @@ button:
   home: Home
   toggle_dark: Toggle dark mode
   toggle_langs: Change languages
+  add: Add
+  update: Update
 intro:
   desc: Opinionated Vite Starter Template
   dynamic-route: Demo of dynamic route
@@ -23,3 +25,5 @@ common:
     clients: Clients
     client: Client
     list: Clients List
+  add: Ajouter
+  update: Modifier

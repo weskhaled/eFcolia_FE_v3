@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
   devicesCount: () => ref(0),
   devicesLoading: () => ref(false),
 })
-const emit = defineEmits(['update:devices', 'update:devicesCount', 'update:devicesLoading', 'deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'addNewDevice', 'updateDevice', 'onSearchDevice'])
+const emit = defineEmits(['update:devices', 'update:devicesCount', 'update:devicesLoading', 'deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'addNewDevice', 'updateDevice', 'deleteDevice', 'onSearchDevice'])
 const { devices, devicesCount, devicesLoading } = useVModels(props, emit)
 
 const { t } = useI18n()
@@ -178,12 +178,6 @@ defineExpose({ scrollTo, containerProps })
                     <span>Edit filter</span>
                   </span>
                 </a-menu-item>
-                <a-menu-item>
-                  <span class="flex items-center leading-6">
-                    <span class="i-ph-plus-circle-duotone anticon text-gray-700 mr-1" />
-                    <span>Add New Device</span>
-                  </span>
-                </a-menu-item>
               </a-menu>
             </template>
           </a-dropdown>
@@ -230,6 +224,7 @@ defineExpose({ scrollTo, containerProps })
             @show-details="emit('showDetails', item)"
             @show-history="emit('showHistory', item)"
             @update="emit('updateDevice', item)"
+            @delete="emit('deleteDevice', item)"
           />
         </template>
       </div>
