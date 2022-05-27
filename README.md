@@ -84,3 +84,8 @@ And you will see the generated file in `dist` that ready to be served.
 pnpm build && pnpm preview --port 80 --host
 ```
 
+### Serve host
+```bash
+pm2 start pnpm --name "v3dev" -- run preview
+```
+

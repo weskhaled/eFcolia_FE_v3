@@ -8,7 +8,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   device: () => ref(null),
 })
-const emit = defineEmits(['click', 'showDetails', 'showHistory', 'showStatistics', 'update', 'delete'])
+
+const emit = defineEmits(['click', 'showDetails', 'showHistory', 'showStatistics', 'showReporting', 'update', 'delete'])
 
 const { t } = useI18n()
 
@@ -130,20 +131,26 @@ const { t } = useI18n()
               </a-menu-item>
               <a-menu-item @click="() => emit('showStatistics')">
                 <span class="flex items-center leading-6">
-                  <span class="i-ph-activity anticon text-green-600 mr-1" />
-                  <span>Statistics device</span>
+                  <span class="i-ph-activity anticon text-green-800 mr-1" />
+                  <span>Statistics</span>
+                </span>
+              </a-menu-item>
+              <a-menu-item @click="() => emit('showReporting')">
+                <span class="flex items-center leading-6">
+                  <span class="i-carbon-book anticon text-blue-600 mr-1" />
+                  <span>Reporting</span>
                 </span>
               </a-menu-item>
               <a-menu-item @click="() => emit('update')">
                 <span class="flex items-center leading-6">
                   <span class="i-ph-pencil-thin anticon text-blue-600 mr-1" />
-                  <span>Modifier device</span>
+                  <span>Modifier</span>
                 </span>
               </a-menu-item>
               <a-menu-item @click="() => emit('delete')">
                 <span class="flex items-center leading-6">
                   <span class="i-ph-x-duotone anticon text-red-600 mr-1" />
-                  <span>Supprimer device</span>
+                  <span>Supprimer</span>
                 </span>
               </a-menu-item>
             </a-menu>
@@ -170,35 +177,46 @@ const { t } = useI18n()
               dayjs(props.device.localizationdate).format('DD/MM/YYYY HH:mm:ss')
           }}</span>
         </div>
-        <div class="flex items-center text-dark-50 dark:text-light-400 mb-0.5 text-xs">
-          <span class="i-ph-map-pin-duotone block mb-1 mr-0.5" />
-          {{ props.device.adress || 'Pas d\'adresse pour ce device' }}
-        </div>
-      </div>
-      <div class="bg-gray-200/10 dark:text-light-400 shadow-inner p-1.5">
-        <div class="flex text-xs">
-          <div class="flex items-center flex-0 mr-0.5">
-            <span class="i-ph-info-duotone block text-xs mb-0.5 mr-0.5" />
+        <div class="flex items-center justify-between text-dark-50 dark:text-light-400 mb-0.5 text-xs">
+          <div class="flex items-center">
+            <span class="i-ph-map-pin-duotone block mb-1 mr-0.5" />
+            {{ props.device.adress || 'Pas d\'adresse pour ce device' }}
           </div>
-          <div class="flex text-left flex-grow items-center">
-            <div>
-              <span v-if="props.device.description">{{ props.device.description }}</span>
-              <div class="flex-grow mr-auto">
-                <span>
-                  {{
-                    props.device.serialnumber
-                  }}{{ props.device.simcardNumber && ' | +' + props.device.simcardNumber }}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="ml-auto text-right">
-            <div>
-              {{ props.device.latitude || 'null' }}
-            </div>
-            <div>
-              {{ props.device.longitude || 'null' }}
-            </div>
+          <div class="flex items-center">
+            <a-popover :title="false">
+              <template #content>
+                <div class="dark:text-light-400 w-full overflow-hidden">
+                  <div class="flex text-xs">
+                    <div class="flex items-center flex-0 mr-0.5">
+                      <span class="i-ph-info-duotone block text-xs mb-0.5 mr-0.5" />
+                    </div>
+                    <div class="flex text-left flex-grow items-center">
+                      <div>
+                        <span v-if="props.device.description">{{ props.device.description }}</span>
+                        <div class="flex-grow mr-auto">
+                          <span>
+                            {{
+                              props.device.serialnumber
+                            }}{{ props.device.simcardNumber && ' | +' + props.device.simcardNumber }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="ml-2 text-right">
+                      <div>
+                        {{ props.device.latitude || 'null' }}
+                      </div>
+                      <div>
+                        {{ props.device.longitude || 'null' }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <a-button type="link" size="small" class="!flex items-center">
+                <span class="i-ant-design-issues-close-outlined block" />
+              </a-button>
+            </a-popover>
           </div>
         </div>
       </div>
@@ -332,5 +350,8 @@ const { t } = useI18n()
       }
     }
   }
+}
+.ant-popover-inner-content {
+  @apply !p-1.5;
 }
 </style>

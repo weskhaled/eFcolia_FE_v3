@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<Props>(), {
   devicesCount: () => ref(0),
   devicesLoading: () => ref(false),
 })
-const emit = defineEmits(['update:devices', 'update:devicesCount', 'update:devicesLoading', 'deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'addNewDevice', 'updateDevice', 'deleteDevice', 'onSearchDevice'])
+const emit = defineEmits(['update:devices', 'update:devicesCount', 'update:devicesLoading', 'deviceClicked', 'onLoadMore', 'showDetails', 'showHistory', 'deviceReporting', 'addNewDevice', 'updateDevice', 'deleteDevice', 'onSearchDevice'])
 const { devices, devicesCount, devicesLoading } = useVModels(props, emit)
 
 const { t } = useI18n()
@@ -71,7 +71,7 @@ const options = computed<UseFuseOptions<any>>(() => ({
 const { list, containerProps, wrapperProps, scrollTo } = useVirtualList(
   devices,
   {
-    itemHeight: 155,
+    itemHeight: 115,
     overscan: 10,
   },
 )
@@ -188,7 +188,7 @@ defineExpose({ scrollTo, containerProps })
       <div
         v-for="{ index, data: item } in list"
         :id="`device-id-${item.id}`" :key="index" draggable="true"
-        class="flex items-center h-155px p-1"
+        class="flex items-start h-115px p-1"
         :class="[sideCollapsed ? 'justify-center' : 'justify-start', resultsFilteredDevices.length && !resultsFilteredDevices.map(r => r.refIndex).includes(index) ? 'opacity-35' : '!opacity-100']"
       >
         <template v-if="sideCollapsed">
@@ -223,6 +223,7 @@ defineExpose({ scrollTo, containerProps })
             @click="emit('deviceClicked', item)"
             @show-details="emit('showDetails', item)"
             @show-history="emit('showHistory', item)"
+            @show-reporting="emit('deviceReporting', item)"
             @update="emit('updateDevice', item)"
             @delete="emit('deleteDevice', item)"
           />
