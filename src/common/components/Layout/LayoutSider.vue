@@ -1,11 +1,18 @@
 <script setup lang="ts">
+import generatedRoutes from 'virtual:generated-pages'
+
 import { isDark } from '~/common/composables'
 import { mdAndLarger } from '~/common/stores'
 
-const { t, availableLocales, locale } = useI18n()
+const { t } = useI18n()
+const route = useRoute()
 
-const selectedKeysSider = ref<string[]>(['1'])
-const openKeySider = ref<string[]>(['sub1'])
+const selectedKeysSider = ref<string[]>([])
+const openKeySider = ref<string[]>([])
+
+onMounted(() => {
+  selectedKeysSider.value = [`${route.name}`]
+})
 </script>
 
 <template>
@@ -18,25 +25,25 @@ const openKeySider = ref<string[]>(['sub1'])
       :style="{ height: '100%' }"
       class="!dark:border-r-1px !dark:border-white/5"
     >
-      <a-menu-item key="1" @click="$router.push({name: 'dashboard'})">
+      <a-menu-item key="dashboard" @click="$router.push({name: 'dashboard'})">
         <span class>
           <span class="i-ph-car-duotone inline-block anticon text-lg" />
           <span>Devices List</span>
         </span>
       </a-menu-item>
-      <a-menu-item key="2" @click="$router.push({name: 'dashboard-alerts'})">
+      <a-menu-item key="dashboard-alerts" @click="$router.push({name: 'dashboard-alerts'})">
         <span class>
           <span class="i-ant-design-alert-twotone inline-block anticon text-lg" />
           <span>Alert</span>
         </span>
       </a-menu-item>
-      <a-menu-item key="3">
+      <a-menu-item key="dashboard-floats" @click="$router.push({name: 'dashboard-floats'})">
         <span class>
           <span
-            :class="selectedKeysSider.includes('3') ? 'i-ant-design-folder-open-twotone' : 'i-ant-design-folder-twotone'"
+            :class="selectedKeysSider.includes('dashboard-floats') ? 'i-ant-design-folder-open-twotone' : 'i-ant-design-folder-twotone'"
             class="inline-block anticon text-lg"
           />
-          <span>nav 1</span>
+          <span>Liste des Flottes</span>
         </span>
       </a-menu-item>
       <a-sub-menu key="sub2">

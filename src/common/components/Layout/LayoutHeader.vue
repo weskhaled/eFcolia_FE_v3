@@ -18,21 +18,21 @@ const { width } = useWindowSize()
       class="h-full ml-0 transition-all ease-out delay-0.2s flex items-center border-r-1 border-dark-100/5 dark:border-light-100/5"
     >
       <a href="" class="inline-block mr-2" @click.prevent="$router.push({ name: 'dashboard' })">
-        <a-badge-ribbon class="!text-10px !-top-2.2 !rounded-2px">
+        <a-badge-ribbon class="!text-9px !-top-2.2 !rounded-2px">
           <template #text>
             by MatiaSat
           </template>
           <span
-            class="bg-blue-900 w-auto text-light-50 rounded-sm py-2 px-4 font-mono font-bold inline-block flex items-center text-1rem leading-6"
+            class="bg-blue-900 w-auto text-light-50 rounded-sm py-2 px-3 font-mono font-bold inline-block flex items-center text-0.8rem md:text-1.2rem leading-6"
           >
             efcolia
           </span>
         </a-badge-ribbon>
       </a>
     </div>
-    <div class="flex flex-grow px-3 w-auto h-full">
+    <div class="flex flex-grow md:pl-3 w-auto h-full">
       <div
-        class="text-gray-900 w-full mr-2 md:max-w-94.4 text-md dark:text-light-100 rounded-sm flex items-center border-r-1 border-dark-100/5 dark:border-light-100/5"
+        class="text-gray-900 w-full md:max-w-94.4 text-md dark:text-light-100 rounded-sm flex items-center border-r-1 border-dark-100/5 dark:border-light-100/5"
       >
         <div class="hidden leading-6 w-full pr-4">
           {{ t('common.clients.clients') }}:
@@ -57,7 +57,7 @@ const { width } = useWindowSize()
             </template>
           </template> -->
         </a-tree-select>
-        <a-badge-ribbon class="absolute !-top-28px !-right-2 !leading-20px">
+        <a-badge-ribbon class="hidden absolute !-top-28px !-right-2 !leading-20px">
           <template #text>
             <span v-if="devices.length" class="text-12px leading-15px">{{ devices.length }}/{{ devicesCount }} {{
               t('common.devices.devices')
@@ -74,7 +74,7 @@ const { width } = useWindowSize()
       />
     </button>
 
-    <div class="ml-auto flex items-center h-full px-3">
+    <div class="ml-auto flex items-center h-full px-2">
       <DarkSwitch class="hidden sm:block" />
       <a-dropdown class="md:mx-2">
         <a-button
