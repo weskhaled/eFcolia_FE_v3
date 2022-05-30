@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Modal, message } from 'ant-design-vue'
+
 import { api as apiServices, urlSearchParams } from '~/common/composables'
 import { mdAndLarger, selectedClient, sideCollapsed } from '~/common/stores'
 
@@ -9,6 +11,8 @@ const alertDeviceAndFlottes = ref<any>(null)
 const alertConditions = ref<any>(null)
 const alertActions = ref<any>(null)
 const activeTabKey = ref<any>()
+const visibleAlertFormModal = ref<any>(false)
+
 const alertsListRef = ref<HTMLElement | null>(null)
 const alertDetailsRef = ref<HTMLElement | null>(null)
 
@@ -47,6 +51,25 @@ watch(() => selectedClient.value, (val) => {
 }, {
   immediate: true,
 })
+const addAlert = async(alertData) => {
+  console.log(alertData)
+}
+const deleteAlert = (alert) => {
+  const { id, name } = alert
+
+  const alertIndex = alerts.value.findIndex(d => d?.id === id)
+  Modal.confirm({
+    title: h('span', ['Do you want to delete these items? ', h('br'), h('span', { style: 'font-weight: 100;' }, name)]),
+    icon: h('span', { class: 'i-ant-design-exclamation-circle-outlined anticon mr-1' }),
+    content: 'When clicked the OK button, this device will removed',
+    onOk() {
+      return apiServices(`/api/alert/${id}`, { immediate: false }).delete().execute().then(() => alertIndex && (delete alerts.value[alertIndex])).catch(error => message.error(error))
+    },
+    cancelText: 'Cancel',
+    onCancel() {
+    },
+  })
+}
 onMounted(() => {
   sideCollapsed.value = false
 })
@@ -66,7 +89,7 @@ onMounted(() => {
         </h3>
         <a-button
           v-if="mdAndLarger" class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary"
-          size="small" @click="() => { }"
+          size="small" @click="() => visibleAlertFormModal = true"
         >
           <template #icon>
             <span class="anticon i-carbon-add block text-base" />
@@ -83,14 +106,23 @@ onMounted(() => {
         :style="[`max-height: calc(${mdAndLarger ? (alertDetailsRefHeight > windowHeight ? alertDetailsRefHeight + 15 + 'px' : windowHeight - 105 + 'px') : '100vh - 155px'})`]"
       >
         <div
-          v-for="(alert, index) in alerts" :key="alert.id" class="mb-1 p-2 flex mx-1 rounded-sm cursor-pointer"
+          v-for="(alert, index) in alerts.filter(a => a.id)" :key="alert.id" class="mb-1 p-2 flex items-center mx-1 rounded-sm cursor-pointer"
           :class="[index === 0 && 'mt-1', (selectedAlert && (selectedAlert.id === alert.id)) ? 'bg-light-900 dark:bg-dark-400' : 'bg-light-500 dark:bg-dark-700']"
           @click="selectedAlert = alert"
         >
-          <span class="i-carbon-warning-alt-filled text-yellow-500 text-sm inline-block mr-1 flex-grow-0" />
-          <div class="capitalize text-sm">
+          <span class="i-carbon-warning-alt-filled text-yellow-500 text-sm block mr-1 flex-grow-0 items-center" />
+          <span class="capitalize text-sm">
             {{ alert.name }}
-          </div>
+          </span>
+          <a-button
+            danger
+            class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary"
+            size="small" @click.stop="deleteAlert(alert)"
+          >
+            <template #icon>
+              <span class="anticon i-carbon-close-outline block text-base" />
+            </template>
+          </a-button>
         </div>
       </div>
       <div
@@ -248,6 +280,9 @@ onMounted(() => {
       </div>
     </div>
   </div>
+  <AlertFormModal
+    v-model:visible="visibleAlertFormModal" :selected-client="selectedClient" @addAlert="addAlert"
+  />
 </template>
 <style lang="less">
 .ant-tabs-tab {

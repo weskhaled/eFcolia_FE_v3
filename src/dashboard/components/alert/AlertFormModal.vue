@@ -1,24 +1,16 @@
 <script setup lang="ts">
-import { getCurrentInstance } from 'vue'
 import dayjs from 'dayjs'
 import { Form } from 'ant-design-vue'
 import { selectedClient } from '~/common/stores'
 import { api as apiServices } from '~/common/composables'
 
-const formatted = useDateFormat(useNow(), 'YYYY-MM-DD HH:mm')
-// const { setupContext } = getCurrentInstance()
 interface Props {
-  device?: Ref<any>
-  clients: Ref<any[]>
-  devicetypes: Ref<any[]>
-  simcards: Ref<any[]>
+  alert?: Ref<any>
 }
+const formatted = useDateFormat(useNow(), 'YYYY-MM-DD HH:mm')
 
 const props = withDefaults(defineProps<Props>(), {
-  device: () => ref(null),
-  clients: () => ref([]),
-  devicetypes: () => ref([]),
-  simcards: () => ref([]),
+  alert: () => ref(null),
 })
 const emit = defineEmits(['addOrUpdateDevice'])
 
@@ -50,7 +42,6 @@ const modelRef = reactive({
   rangeTimePicker: [dayjs().format('YYYY-MM-DD HH:mm:ss'), null],
   description: '',
 })
-const deviceSubTypes = ref([])
 const rulesRef = reactive({
   name: [
     {
@@ -85,7 +76,7 @@ const onSubmit = () => {
         description,
       } = toRaw(modelRef)
       const formData = {
-        id: props.device?.id || null,
+        id: props.alert?.id || null,
         name,
         clientId,
         devicetype_id,
@@ -113,7 +104,7 @@ const resetForm = () => {
   if (props.device) {
     const { name, clientId, devicetype_id, status, devicesubtype_id, simcard_id, device_id2, findaddress, imei, privacy, serialnumber, description, begindate, enddate } = props.device
     modelRef.name = name
-    modelRef.clientId = clientId || selectedClient.value
+    modelRef.clientId = +clientId || selectedClient.value
     modelRef.devicetype_id = devicetype_id
     modelRef.devicesubtype_id = devicesubtype_id || null
     modelRef.device_id2 = device_id2 || ''
@@ -128,38 +119,20 @@ const resetForm = () => {
   }
   else {
     resetFields()
-    modelRef.clientId = selectedClient.value
+    modelRef.clientId = +selectedClient.value
   }
 }
-watch(() => props.device, () => {
+watch(() => props.alert, () => {
   resetForm()
-}, { immediate: true })
-watch(selectedClient, () => {
-  !props.device && (modelRef.clientId = selectedClient.value)
-}, { immediate: true })
-watch(() => modelRef.devicetype_id, async(val) => {
-  if (!val)
-    return
+})
 
-  val !== props.device?.devicetype_id && (modelRef.devicesubtype_id = null)
-  deviceSubTypes.value = []
-
-  const { data } = await apiServices(`api/deviceSubType/${val}`).get().json()
-  data.value && (deviceSubTypes.value = data.value)
-}, { immediate: true })
 </script>
 
 <template>
-  <a-modal
-    width="55%" style="top: 70px" destroy-on-close :body-style="{ padding: 0 }" @after-close="() => {
-      resetFields()
-      modelRef.clientId = selectedClient.value
-    }
-    "
-  >
+  <a-modal width="55%" style="top: 70px" destroy-on-close :body-style="{ padding: 0 }" @after-close="resetFields()">
     <template #title>
       <span>
-        {{ device ? `Update ${device.name}` : 'Add' }}
+        {{ alert ? `Update ${alert.name}` : 'Add' }}
       </span>
     </template>
     <div class="min-h-70 max-h-[calc(100vh-300px)] overflow-scroll p-5 pb-1">
@@ -171,29 +144,15 @@ watch(() => modelRef.devicetype_id, async(val) => {
           <a-form-item label="Client" v-bind="validateInfos.clientId">
             <a-tree-select
               v-model:value="modelRef.clientId" show-search
-              class="w-full md:min-w-70" tree-node-filter-prop="title"
+              class="w-full md:min-w-70" tree-node-filter-prop="title" :tree-default-expanded-keys="[1]"
               :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }" placeholder="Please select a client"
-              :tree-default-expand-all="false" tree-data-simple-mode :disabled="!clients" :tree-data="clients"
+              :tree-default-expand-all="false" tree-data-simple-mode :disabled="!clients" :tree-data="clients || []"
               :height="235" virtual
             >
               <template #title="{ title }">
                 {{ title }}
               </template>
             </a-tree-select>
-          </a-form-item>
-        </div>
-        <div class="grid-cols-2 grid gap-4">
-          <a-form-item label="deviceTypeId" v-bind="validateInfos.devicetype_id">
-            <a-select
-              v-model:value="modelRef.devicetype_id"
-              :options="devicetypes.map(dt => ({ value: dt.devicetype_id, label: dt.name }))"
-            />
-          </a-form-item>
-          <a-form-item label="deviceSubtypeId" v-bind="validateInfos.devicesubtype_id">
-            <a-select
-              v-model:value="modelRef.devicesubtype_id" allow-clear
-              :options="deviceSubTypes.map(dst => ({ value: dst.devicesubtype_id, label: dst.name }))"
-            />
           </a-form-item>
         </div>
         <div class="grid-cols-2 grid gap-4">
@@ -231,18 +190,6 @@ watch(() => modelRef.devicetype_id, async(val) => {
             />
           </a-form-item>
         </div>
-        <hr class="border-gray-500/20 mb-3">
-        <div class="grid-cols-2 grid gap-4">
-          <a-form-item label="simcard_id" v-bind="validateInfos.simcard_id">
-            <a-select
-              v-model:value="modelRef.simcard_id"
-              :options="props.simcards.map(dt => ({ value: dt.simcard_id, label: `${dt.sim}` }))"
-            />
-          </a-form-item>
-          <a-form-item label="privacy" v-bind="validateInfos.privacy">
-            <a-select v-model:value="modelRef.privacy" :options="privacies" />
-          </a-form-item>
-        </div>
       </a-form>
     </div>
     <template #footer>
@@ -251,7 +198,7 @@ watch(() => modelRef.devicetype_id, async(val) => {
           Reset
         </a-button>
         <a-button type="primary" @click.prevent="onSubmit">
-          {{ device ? 'Update' : 'Create' }}
+          {{ alert ? 'Update' : 'Create' }}
         </a-button>
       </a-form-item>
     </template>

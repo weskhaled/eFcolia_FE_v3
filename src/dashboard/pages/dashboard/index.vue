@@ -31,7 +31,7 @@ const transitionNumber = useTransition(baseNumber, {
   transition: TransitionPresets.easeInOut,
 })
 
-const deviceDetailsDateRange = ref<[Dayjs, Dayjs]>([dayjs('2018-01-03 00:00:00'), dayjs('2018-01-04 00:00:00')])
+const deviceDetailsDateRange = ref<[Dayjs, Dayjs]>([dayjs(new Date()), dayjs(new Date())])
 const dataHistories = ref(null)
 
 const mapToolsRef = ref(null)
@@ -76,13 +76,13 @@ const markerClicked = (deviceId) => {
 const onLoadMore = async(refresh = false) => {
   pause()
   const length = devices.value.length
-  if (length < devicesCount.value - 1) {
+  if (length < devicesCount.value - 1 || refresh) {
     devicesLoading.value = true
     const { data } = await apiServices(`api/device/byClientId/${selectedClient.value}?skip=${refresh ? ~~Math.max(0, length - 20) : length}`).get().json()
 
     const devicesData: any = unref(data)
     if (devicesData) {
-      devices.value = Array.from([...devices.value, ...devicesData.listDevice].filter(d => d).reduce((p, c) => p.set(c.id, c), new Map()).values())
+      devices.value = Array.from([...devices.value, ...devicesData.listDevice].filter(d => d && d.id).reduce((p, c) => p.set(c.id, c), new Map()).values())
       devicesCount.value = devicesData.count
     }
     devicesLoading.value = false
@@ -567,7 +567,7 @@ const addOrUpdateDevice = async(formData: any) => {
 
 .device-history-table {
   .ant-tabs-nav {
-    @apply bg-zinc-100 dark: bg-dark-500;
+    @apply bg-zinc-100 dark:bg-dark-500;
   }
 
   .ant-tabs-content {
