@@ -16,34 +16,41 @@ onMounted(() => {
 </script>
 
 <template>
-  <a-layout-sider class="z-42 md:rounded-none rounded-b-sm overflow-hidden" collapsed :trigger="null" collapsed-width="60">
-    <a-menu
-      v-model:selectedKeys="selectedKeysSider"
-      v-model:openKeys="openKeySider"
-      :theme="isDark ? 'dark' : 'light'"
-      :mode="mdAndLarger ? 'inline': 'horizontal'"
-      :style="{ height: '100%' }"
-      class="!dark:border-r-1px !dark:border-white/5"
-    >
-      <a-menu-item key="dashboard" @click="$router.push({name: 'dashboard'})">
+  <a-layout-sider class="z-42 md:rounded-none rounded-b-sm overflow-hidden" collapsed :trigger="null"
+    collapsed-width="60">
+    <a-menu v-model:selectedKeys="selectedKeysSider" v-model:openKeys="openKeySider" :theme="isDark ? 'dark' : 'light'"
+      :mode="mdAndLarger ? 'inline' : 'horizontal'" :style="{ height: '100%' }"
+      class="!dark:border-r-1px !dark:border-white/5">
+      <a-menu-item key="dashboard" @click="$router.push({ name: 'dashboard' })">
         <span class>
           <span class="i-ph-car-duotone inline-block anticon text-lg" />
           <span>Devices List</span>
         </span>
       </a-menu-item>
-      <a-menu-item key="dashboard-alerts" @click="$router.push({name: 'dashboard-alerts'})">
+      <a-menu-item key="dashboard-alerts" @click="$router.push({ name: 'dashboard-alerts' })">
         <span class>
           <span class="i-ant-design-alert-twotone inline-block anticon text-lg" />
           <span>Alert</span>
         </span>
       </a-menu-item>
-      <a-menu-item key="dashboard-floats" @click="$router.push({name: 'dashboard-floats'})">
+      <a-menu-item key="dashboard-floats" @click="$router.push({ name: 'dashboard-floats' })">
         <span class>
           <span
             :class="selectedKeysSider.includes('dashboard-floats') ? 'i-ant-design-folder-open-twotone' : 'i-ant-design-folder-twotone'"
-            class="inline-block anticon text-lg"
-          />
+            class="inline-block anticon text-lg" />
           <span>Liste des Flottes</span>
+        </span>
+      </a-menu-item>
+      <a-menu-item key="dashboard-flottes" @click="$router.push({ name: 'dashboard-flottes' })">
+        <span class>
+          <span class="i-carbon-enterprise inline-block anticon text-lg" />
+          <span>Liste des sociétés</span>
+        </span>
+      </a-menu-item>
+      <a-menu-item key="dashboard-users" @click="$router.push({ name: 'dashboard-users' })">
+        <span class>
+          <span class="i-carbon-user-multiple inline-block anticon text-lg" />
+          <span>Liste des contacts</span>
         </span>
       </a-menu-item>
       <a-sub-menu key="sub2">

@@ -62,8 +62,9 @@ const { t } = useI18n()
   .ant-descriptions-item-label {
     @apply !font-bold;
   }
+
   .ant-descriptions-item-content {
-    @apply !font-thin !text-gray-700;
+    @apply !font-thin !text-gray-700 !dark:text-gray-200;
   }
 }
 </style>
