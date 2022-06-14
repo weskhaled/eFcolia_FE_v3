@@ -7,10 +7,11 @@ import { mdAndLarger, selectedClient, sideCollapsed } from '~/common/stores'
 const flottes = ref<any>([])
 const flottesLoading = ref<any>(true)
 const selectedFlotte = ref<any>(null)
-const flotteDetails = ref<any>(null)
+const clientDetails = ref<any>(null)
+const clientDetailsLoading = ref<any>(true)
+const updateClient = ref<any>(false)
 const countries = ref<any>([])
 const clientTypes = ref<any>(null)
-const alertActions = ref<any>(null)
 const visibleAlertFormModal = ref<any>(false)
 
 const alertsListRef = ref<HTMLElement | null>(null)
@@ -21,9 +22,15 @@ const { arrivedState } = useScroll(alertsListRef)
 const { top, bottom } = toRefs(arrivedState)
 const { height: alertDetailsRefHeight } = useElementSize(alertDetailsRef)
 
-const getFlottes = () => {
+const newOrUpdateClient = computed(() => updateClient.value ? (clientDetails.value || null) : null)
+const getClients = () => {
   flottesLoading.value = true
-  apiServices(`/api/client/${selectedClient.value}/childs`).get().json().then(({ data }) => flottes.value = data.value)
+  apiServices(`/api/client/${selectedClient.value}/childs`).get().json().then(({ data }) => {
+    flottes.value = data.value
+
+    if (flottes.value.length)
+      selectedFlotte.value = flottes.value[0]
+  })
 
   flottesLoading.value = false
 }
@@ -31,22 +38,26 @@ watch(() => selectedFlotte.value, (val) => {
   if (!val.client_id)
     return
 
-  flotteDetails.value = null
-  apiServices(`/api/client/${val.client_id}`).get().json().then(({ data }) => flotteDetails.value = data.value)
+  clientDetailsLoading.value = true
+  clientDetails.value = null
+  apiServices(`/api/client/${val.client_id}`).get().json().then(({ data }) => {
+    clientDetails.value = data.value
+    clientDetailsLoading.value = false
+  })
 })
 watch(() => selectedClient.value, (val) => {
   if (!val)
     return
 
   urlSearchParams.clientId = val || null
-  getFlottes()
+  getClients()
 }, {
   immediate: true,
 })
 
-const addOrUpdateAlert = async (formData: any) => {
+const addOrUpdateClient = async (formData: any) => {
   if (formData.id !== null) {
-    const { error, statusCode } = await apiServices('/api/alert').put(formData).json()
+    const { error, statusCode } = await apiServices('/api/client').put(formData).json()
     if (statusCode.value !== 200)
       message.error(`${error.value}`)
     else
@@ -55,7 +66,7 @@ const addOrUpdateAlert = async (formData: any) => {
 
   else {
     delete formData.id
-    const { error, statusCode } = await apiServices('/api/alert').post(formData).json()
+    const { error, statusCode } = await apiServices('/api/client').post(formData).json()
     if (statusCode.value !== 200)
       message.error(`${error.value}`)
     else
@@ -63,7 +74,7 @@ const addOrUpdateAlert = async (formData: any) => {
   }
 
   visibleAlertFormModal.value = false
-  getFlottes()
+  getClients()
 }
 
 const deleteAlert = (flotte: any) => {
@@ -86,8 +97,8 @@ onMounted(() => {
   sideCollapsed.value = false
   countries.value = []
   clientTypes.value = []
-  apiServices(`/api/country`).get().json().then(({ data }) => countries.value = data.value)
-  apiServices(`/api/clientType`).get().json().then(({ data }) => clientTypes.value = data.value)
+  apiServices(`/api/country`).get().json().then(({ data }) => countries.value = data.value.map(c => ({ label: `${c.name} "${c.lang_id}"`, value: `${c.country_id}#${c.lang_id}` })))
+  apiServices(`/api/clientType`).get().json().then(({ data }) => clientTypes.value = data.value.map(ct => ({ label: ct.type, value: ct.clienttype_id })))
 })
 </script>
 
@@ -98,7 +109,7 @@ onMounted(() => {
       <div
         class="flex border-light-600 dark:border-dark-900 border-b text-sm leading-15px p-2 m-0 bg-light-300 dark:bg-dark-700 w-full items-center">
         <h3 class="pl-15 md:pl-0 text-sm leading-32px dark:text-light-400 mr-auto my-auto">
-          {{ flottes.length }} Alerts
+          {{ flottes.length }} Clients
         </h3>
         <a-button class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary" size="small"
           @click="() => visibleAlertFormModal = true">
@@ -152,38 +163,46 @@ onMounted(() => {
           Details
         </h3>
       </div>
-      <div ref="alertDetailsRef" class="p-0">
-        <a-descriptions v-if="flottes.length && selectedFlotte && flotteDetails" class="p-2">
-          <a-descriptions-item label="Name">
-            {{ flotteDetails.commercialname }}
-          </a-descriptions-item>
-          <a-descriptions-item label="Description">
-            {{ flotteDetails.description }}
-          </a-descriptions-item>
-          <a-descriptions-item label="Active">
-            <a-badge :status="flotteDetails.clientstatus === 1 ? 'processing' : 'error'"
-              :text="flotteDetails.clientstatus === 1 ? 'Active' : 'Inactive'" />
-          </a-descriptions-item>
-          <a-descriptions-item label="From">
-            {{ flotteDetails.begindate }}
-          </a-descriptions-item>
-          <a-descriptions-item label="To">
-            {{ flotteDetails.enddate }}
-          </a-descriptions-item>
-          <a-descriptions-item label="Importance">
-            {{
-                selectedFlotte.level === 3
-                  ? 'Danger'
-                  : selectedFlotte.level === 2
-                    ? 'Warning'
-                    : 'Normal'
-            }}
-          </a-descriptions-item>
-        </a-descriptions>
+      <div ref="alertDetailsRef" class="p-0 h-[calc(100%-50px)]">
+        <a-skeleton v-if="clientDetailsLoading" active />
+        <div v-else-if="flottes.length && selectedFlotte && clientDetails"
+          class="flex flex-col justify-between min-h-full">
+          <a-descriptions class="p-2">
+            <a-descriptions-item label="Nom commercial">
+              {{ clientDetails.commercialname }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Description">
+              {{ clientDetails.description }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Date de début">
+              {{ clientDetails.begindate }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Active">
+              <a-badge :status="clientDetails.clientstatus === 1 ? 'processing' : 'error'"
+                :text="clientDetails.clientstatus === 1 ? 'Active' : 'Inactive'" />
+            </a-descriptions-item>
+            <a-descriptions-item label="Pays">
+              {{ countries.find(c => c.value.split('#')[0] === clientDetails.country)?.label || '--' }}
+            </a-descriptions-item>
+            <a-descriptions-item label="Type de client">
+              {{ clientTypes.find(ct => ct.value === clientDetails.clientType)?.label || '--' }}
+            </a-descriptions-item>
+          </a-descriptions>
+          <div class="flex justify-end p-3">
+            <a-button type="primary" class="flex items-center" @click="() => {
+              updateClient = true
+              visibleAlertFormModal = true
+            }">
+              <span class="i-carbon-edit inline-block text-white text-md mr-1" />
+              Update
+            </a-button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  <AlertFormModal v-model:visible="visibleAlertFormModal" @addOrUpdateAlert="addOrUpdateAlert" />
+  <ClientFormModal v-model:visible="visibleAlertFormModal" :client="newOrUpdateClient" :countries="countries"
+    :clientTypes="clientTypes" @addOrUpdateClient="addOrUpdateClient" />
 </template>
 <style lang="less">
 .ant-tabs-tab {

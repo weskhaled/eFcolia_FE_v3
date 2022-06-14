@@ -41,7 +41,7 @@ onMounted(() => {
           <span>Liste des Flottes</span>
         </span>
       </a-menu-item>
-      <a-menu-item key="dashboard-flottes" @click="$router.push({ name: 'dashboard-flottes' })">
+      <a-menu-item key="dashboard-clients" @click="$router.push({ name: 'dashboard-clients' })">
         <span class>
           <span class="i-carbon-enterprise inline-block anticon text-lg" />
           <span>Liste des sociétés</span>

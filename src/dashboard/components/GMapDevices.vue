@@ -19,13 +19,17 @@ interface Position {
 interface Props {
   center?: Ref<Position>
   devices?: Ref<any[]>
+  showDevices?: Ref<Boolean>
   selectedDevice?: Ref<any>
+  dataHistories?: Ref<any[]>
 }
 
 const props = withDefaults(defineProps<Props>(), {
   center: () => ref(({ lat: 24.886, lng: -70.268 })),
   devices: () => ref([]),
+  showDevices: () => ref(true),
   selectedDevice: () => ref(null),
+  dataHistories: () => ref([]),
 })
 const emit = defineEmits(['markerClicked'])
 
@@ -40,6 +44,8 @@ const showContentControlRefTOPCENTER = ref(false)
 const map: any = ref(null)
 const api: any = ref(null)
 let infoWindow: any = null
+let historyPath: any = null
+let historyPaths: any = []
 let latlngbounds: any = null
 let markers: any = []
 let markerClusterer: any = null
@@ -73,18 +79,100 @@ const centerMapView = () => {
     map.value.fitBounds(latlngbounds)
   }
 }
+const histories = computed(() => props.showDevices?.value ? [] : props.dataHistories
+  ?.filter(p => p.latitude && p.longitude)?.filter((__position, index, selfArray) =>
+    selfArray[index]?.latitude !== selfArray[index + 1]?.latitude && selfArray[index]?.longitude !== selfArray[index + 1]?.longitude
+  )
+  ?.map(({ latitude: lat, longitude: lng, speed }) => {
+    const position = {
+      lat,
+      lng,
+      speed
+    }
 
-watch(() => props.devices, (val) => {
+    return position as google.maps.LatLngLiteral
+  }) || [])
+
+watch(() => histories.value, async (val) => {
   if (!map.value)
     return
+
+  historyPaths.forEach(element => element.setMap(null));
+  // markers.forEach(element => element.setMap(null));
+  // historyPaths = []
+  // markers = []
+  if (markerClusterer) {
+    markerClusterer.clearMarkers()
+    markerClusterer.addMarkers(markers)
+  }
+
   if (!val.length) {
-    deleteMarkers()
-    reinsertMarkers()
     return
   }
 
-  // Add some markers to the map.
-  markers = val.map(({ id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected }) => {
+  markers.push(new google.maps.Marker({
+    position: val[0],
+    icon: `https://api.iconify.design/ph:map-pin-duotone.svg?width=25px&height=25px&color=%2300ff00`,
+    label: {
+      text: `Start`,
+      className: 'bg-white text-black dark:bg-dark-600 !dark:text-light-300 relative -top-6 p-1 text-sm rounded-sm',
+    },
+    opacity: 1,
+    map: map.value
+  }),
+    new google.maps.Marker({
+      position: val[val.length - 1],
+      icon: `https://api.iconify.design/ph:map-pin-duotone.svg?width=25px&height=25px&color=%23ff0000`,
+      label: {
+        text: `End`,
+        className: 'bg-white text-black dark:bg-dark-600 !dark:text-light-300 relative -top-6 p-1 text-sm rounded-sm',
+      },
+      opacity: 1,
+      map: map.value
+    }))
+  for (let i = 0; i < val.length - 1; i++) {
+    historyPaths.push(new google.maps.Polyline({
+      path: [val[i], val[i + 1]],
+      strokeColor: (val[i].speed + val[i + 1].speed) / 2 > 50 ? '#FF0000' : '#00AAFF',
+      strokeOpacity: 1.0,
+      strokeWeight: 4,
+      map: map.value
+    }));
+    if (i > 0 && +val[i].speed === 0) {
+      markers.push(new google.maps.Marker({
+        position: val[i],
+        icon: `https://api.iconify.design/openmoji:stop-sign.svg?width=25px&height=25px&color=%2300ff00`,
+        opacity: 1,
+        map: map.value
+      }))
+    }
+    latlngbounds?.extend(val[i + 1])
+  }
+  // historyPath = new google.maps.Polyline({
+  //   path: val,
+  //   geodesic: true,
+  //   strokeColor: "#FF0000",
+  //   strokeOpacity: 1.0,
+  //   strokeWeight: 4,
+  // });
+  // markers.length && markers?.setMap(map.value)
+
+  map.value.setCenter(latlngbounds.getCenter())
+  map.value.fitBounds(latlngbounds)
+})
+watch(() => [props.devices, props.showDevices], ([valDevices, valShowDevices]) => {
+  if (!map.value)
+    return
+
+  markers.forEach(marker => marker.setMap(null))
+
+  if (!valDevices.length || !valShowDevices) {
+    deleteMarkers()
+    return
+  }
+
+  // Add markers to the map.
+  markers = valDevices.map(({ id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected }) => {
     // selected && (selectedDevice.value = { id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected })
     const marker = new google.maps.Marker({
       position: { lat, lng },
@@ -109,7 +197,7 @@ watch(() => props.devices, (val) => {
 
   !unref(props.selectedDevice) && centerMapView()
 
-  if (!markerClusterer) {
+  if (!markerClusterer && valShowDevices) {
     markerClusterer = new MarkerClusterer({ markers })
     markerClusterer.setMap(map.value)
   }
@@ -161,7 +249,7 @@ const addDrawingManager = () => {
   drawingManager.setMap(map.value)
 }
 
-(async() => {
+(async () => {
   await until(mapRef).not.toBeNull()
 
   await new Loader(LOADER_OPTIONS).load()
@@ -172,26 +260,27 @@ const addDrawingManager = () => {
     content: '',
     disableAutoPan: true,
   })
-  latlngbounds = new google.maps.LatLngBounds()
+  historyPath = new google.maps.Polyline
+  latlngbounds = new google.maps.LatLngBounds
   mapOptions.mapTypeId = google.maps.MapTypeId.ROADMAP
 })()
 
-; (async() => {
-  await until(map).not.toBeNull()
+  ; (async () => {
+    await until(map).not.toBeNull()
 
-  markers = []
-  addDrawingManager()
+    markers = []
+    addDrawingManager()
 
-  if (slots.default && slots.default().findIndex(o => o.type !== Comment) !== -1) {
-    showContentControlRefTOPCENTER.value = true
-    map.value.controls[api.value.ControlPosition.TOP_CENTER].push(controlRefTOPCENTER.value)
-  }
-  // map.value.addListener('zoom_changed', reinsertMarkers)
-  // map.value.addListener('zoom_changed', () => markerClusterer && markerClusterer.redraw())
-  // markerCluster.value = new MarkerClusterer({
-  //   markers: markers(props.devices, map.value),
-  // })
-})()
+    if (slots.default && slots.default().findIndex(o => o.type !== Comment) !== -1) {
+      showContentControlRefTOPCENTER.value = true
+      map.value.controls[api.value.ControlPosition.TOP_CENTER].push(controlRefTOPCENTER.value)
+    }
+    // map.value.addListener('zoom_changed', reinsertMarkers)
+    // map.value.addListener('zoom_changed', () => markerClusterer && markerClusterer.redraw())
+    // markerCluster.value = new MarkerClusterer({
+    //   markers: markers(props.devices, map.value),
+    // })
+  })()
 const addRectangle = (bounds = {
   north: 44.599,
   south: 44.49,
