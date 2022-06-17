@@ -136,12 +136,14 @@ watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async () => {
     to = dateRange[1].format('YYYY-MM-DD 23:59:59')
   }
   if (selectedDevice.value && showDeviceDetails.value) {
+    pause()
     showDevicesInMap.value = false
     dataHistories.value = null
     const { data } = await apiServices(`/api/history/${selectedDevice.value.id}?from=${from}&to=${to}`).get().json()
-
+    
     data.value && (dataHistories.value = data.value)
   } else if (!showDeviceDetails.value) {
+    resume()
     showDevicesInMap.value = true
     dataHistories.value = null
   }

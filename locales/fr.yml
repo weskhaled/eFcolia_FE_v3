@@ -19,6 +19,9 @@ common:
     devices: devices
     list: list des boitier
     notFound: 0 boitier pour ce client
-  client: client
+  clients:
+    clients: Clients
+    client: Client
+    list: Clients List
   add: Ajouter
   update: Modifier

@@ -6,12 +6,12 @@ import { mdAndLarger, selectedClient, sideCollapsed } from '~/common/stores'
 
 const users = ref<any>([])
 const usersLoading = ref<any>(true)
+const objectTypes = ref<any>(null)
 const selectedUser = ref<any>(null)
-const alertDeviceAndFlottes = ref<any>(null)
-const alertConditions = ref<any>(null)
-const alertActions = ref<any>(null)
+const userDetails = ref<any>(null)
+
 const activeTabKey = ref<any>()
-const visibleAlertFormModal = ref<any>(false)
+const visibleUserFormModal = ref<any>(false)
 
 const usesListRef = ref<HTMLElement | null>(null)
 const userDetailsRef = ref<HTMLElement | null>(null)
@@ -27,17 +27,7 @@ const getUsers = () => {
 
   usersLoading.value = false
 }
-watch(() => selectedUser.value, (val) => {
-  if (!val.id)
-    return
 
-  alertDeviceAndFlottes.value = null
-  alertConditions.value = null
-  alertActions.value = null
-  apiServices(`/api/alertDeviceAndFlotte/${val.id}`).get().json().then(({ data }) => alertDeviceAndFlottes.value = data.value)
-  apiServices(`/api/alertCondition/${val.id}`).get().json().then(({ data }) => alertConditions.value = data.value)
-  apiServices(`/api/alertAction/${val.id}`).get().json().then(({ data }) => alertActions.value = data.value)
-})
 watch(() => selectedClient.value, (val) => {
   if (!val)
     return
@@ -48,7 +38,18 @@ watch(() => selectedClient.value, (val) => {
   immediate: true,
 })
 
-const addOrUpdateAlert = async (formData: any) => {
+watch(() => selectedUser.value, async (val) => {
+  if (!val)
+    return
+
+  userDetails.value = null
+  const { data } = await apiServices(`/api/user/${val.id}`).get().json()
+  data.value && (userDetails.value = data.value)
+}, {
+  immediate: true,
+})
+
+const addOrUpdateUser = async (formData: any) => {
   if (formData.id !== null) {
     const { error, statusCode } = await apiServices('/api/alert').put(formData).json()
     if (statusCode.value !== 200)
@@ -66,7 +67,7 @@ const addOrUpdateAlert = async (formData: any) => {
       message.info(`Alert: ${formData.name} Added`)
   }
 
-  visibleAlertFormModal.value = false
+  visibleUserFormModal.value = false
   getUsers()
 }
 
@@ -88,6 +89,7 @@ const deleteAlert = (user: any) => {
 }
 onMounted(() => {
   sideCollapsed.value = false
+  apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value = data.value)
 })
 </script>
 
@@ -101,7 +103,7 @@ onMounted(() => {
           {{ users.length }} Alerts
         </h3>
         <a-button class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary" size="small"
-          @click="() => visibleAlertFormModal = true">
+          @click="() => visibleUserFormModal = true">
           <template #icon>
             <span class="anticon i-carbon-add block text-base" />
           </template>
@@ -119,6 +121,9 @@ onMounted(() => {
           <span class="i-carbon-warning-alt-filled text-yellow-500 text-sm block mr-1 flex-grow-0 items-center" />
           <span class="capitalize text-sm">
             {{ user.firstname }}
+            <span class="text-gray-400 dark:text-gray-500">
+              {{ user.lastname }}
+            </span> 
           </span>
           <a-button danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
             @click.stop="deleteAlert(user)">
@@ -153,12 +158,13 @@ onMounted(() => {
         </h3>
       </div>
       <div ref="userDetailsRef" class="p-0">
-        <a-descriptions v-if="users.length && selectedUser" class="p-2">
-          <a-descriptions-item label="Name">
-            {{ selectedUser.name }}
+        <a-skeleton class="p-3" v-if="!userDetails" active />
+        <a-descriptions v-if="users.length && selectedUser && userDetails" class="p-2">
+          <a-descriptions-item label="firstname">
+            {{ userDetails.firstname }}
           </a-descriptions-item>
-          <a-descriptions-item label="Description">
-            {{ selectedUser.description }}
+          <a-descriptions-item label="lastname">
+            {{ userDetails?.lastname }}
           </a-descriptions-item>
           <a-descriptions-item label="Active">
             <a-badge :status="selectedUser.status === 1 ? 'processing' : 'error'"
@@ -183,8 +189,8 @@ onMounted(() => {
         <div>
           <a-tabs v-model:activeKey="activeTabKey">
             <a-tab-pane key="1" tab="Permissions">
-              <a-table :scroll="{ x: 450, y: windowHeight - 362 }" size="small" :loading="!alertDeviceAndFlottes"
-                :data-source="alertDeviceAndFlottes || []" :columns="[{
+              <a-table :scroll="{ x: 450, y: windowHeight - 362 }" size="small" :loading="true"
+                :data-source="[]" :columns="[{
                   title: 'Nom alerte',
                   dataIndex: 'alertName',
                   key: 'alertName',
@@ -219,7 +225,7 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <AlertFormModal v-model:visible="visibleAlertFormModal" @addOrUpdateAlert="addOrUpdateAlert" />
+  <UserFormModal v-model:visible="visibleUserFormModal" @addOrUpdateUser="addOrUpdateUser" />
 </template>
 <style lang="less">
 .ant-tabs-tab {

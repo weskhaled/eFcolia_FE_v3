@@ -33,6 +33,7 @@ declare module 'vue' {
     ARangePicker: typeof import('ant-design-vue/es')['RangePicker']
     AResult: typeof import('ant-design-vue/es')['Result']
     ASelect: typeof import('ant-design-vue/es')['Select']
+    ASkeleton: typeof import('ant-design-vue/es')['Skeleton']
     ASubMenu: typeof import('ant-design-vue/es')['SubMenu']
     ASwitch: typeof import('ant-design-vue/es')['Switch']
     ATable: typeof import('ant-design-vue/es')['Table']
@@ -57,6 +58,7 @@ declare module 'vue' {
     LayoutSider: typeof import('./common/components/Layout/LayoutSider.vue')['default']
     Map: typeof import('./common/components/Map.vue')['default']
     README: typeof import('./common/components/README.md')['default']
+    UserFormModal: typeof import('./dashboard/components/user/UserFormModal.vue')['default']
   }
 }
 

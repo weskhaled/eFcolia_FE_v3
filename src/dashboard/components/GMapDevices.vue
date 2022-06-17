@@ -83,11 +83,23 @@ const histories = computed(() => props.showDevices?.value ? [] : props.dataHisto
   ?.filter(p => p.latitude && p.longitude)?.filter((__position, index, selfArray) =>
     selfArray[index]?.latitude !== selfArray[index + 1]?.latitude && selfArray[index]?.longitude !== selfArray[index + 1]?.longitude
   )
-  ?.map(({ latitude: lat, longitude: lng, speed }) => {
+  ?.map(({
+    latitude: lat,
+    longitude: lng,
+    speed,
+    localizationdate,
+    adress,
+    temperature1,
+    enginestate
+  }) => {
     const position = {
       lat,
       lng,
-      speed
+      speed,
+      localizationdate,
+      adress,
+      temperature1,
+      enginestate
     }
 
     return position as google.maps.LatLngLiteral
@@ -98,9 +110,6 @@ watch(() => histories.value, async (val) => {
     return
 
   historyPaths.forEach(element => element.setMap(null));
-  // markers.forEach(element => element.setMap(null));
-  // historyPaths = []
-  // markers = []
   if (markerClusterer) {
     markerClusterer.clearMarkers()
     markerClusterer.addMarkers(markers)
@@ -110,6 +119,7 @@ watch(() => histories.value, async (val) => {
     return
   }
 
+  markers = []
   markers.push(new google.maps.Marker({
     position: val[0],
     icon: `https://api.iconify.design/ph:map-pin-duotone.svg?width=25px&height=25px&color=%2300ff00`,
@@ -139,24 +149,31 @@ watch(() => histories.value, async (val) => {
       map: map.value
     }));
     if (i > 0 && +val[i].speed === 0) {
-      markers.push(new google.maps.Marker({
+      const marker = new google.maps.Marker({
         position: val[i],
         icon: `https://api.iconify.design/openmoji:stop-sign.svg?width=25px&height=25px&color=%2300ff00`,
         opacity: 1,
-        map: map.value
-      }))
+        map: map.value,
+      })
+      marker.addListener("click", () => {
+        infoWindow.setContent(`
+          <h3 class="text-xs text-gray-700 mb-1"><span class="text-gray-500">Date: </span>${val[i].localizationdate}</h3>
+          <h3 class="text-xs text-gray-700 mb-1"><span class="text-gray-500">Adress: </span>${val[i].adress}</h3>
+          <h3 class="text-xs text-gray-700 mb-1"><span class="text-gray-500">Temperature: </span>${val[i].temperature1}</h3>
+          <h3 class="text-xs text-gray-700 mb-1"><span class="text-gray-500">EngineState: </span>${val[i].enginestate}</h3>
+          <h3 class="text-xs text-gray-700"><span class="text-gray-500">Speed: </span>${val[i].speed}</h3>
+        `)
+        infoWindow.open({
+          anchor: marker,
+          map: map.value,
+          shouldFocus: false,
+        });
+      });
+      markers.push(marker)
     }
     latlngbounds?.extend(val[i + 1])
   }
-  // historyPath = new google.maps.Polyline({
-  //   path: val,
-  //   geodesic: true,
-  //   strokeColor: "#FF0000",
-  //   strokeOpacity: 1.0,
-  //   strokeWeight: 4,
-  // });
-  // markers.length && markers?.setMap(map.value)
-
+  await nextTick()
   map.value.setCenter(latlngbounds.getCenter())
   map.value.fitBounds(latlngbounds)
 })
@@ -257,7 +274,7 @@ const addDrawingManager = () => {
   api.value = google.maps
   map.value = new google.maps.Map(mapRef.value as HTMLElement, unref(mapOptions))
   infoWindow = new google.maps.InfoWindow({
-    content: '',
+    content: 'infoWindow',
     disableAutoPan: true,
   })
   historyPath = new google.maps.Polyline
