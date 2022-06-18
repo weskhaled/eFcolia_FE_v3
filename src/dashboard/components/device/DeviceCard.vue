@@ -17,19 +17,15 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <a-card
-    v-if="props.device" :bordered="true" size="small"
+  <a-card v-if="props.device" :bordered="true" size="small"
     :class="[props.device.selected && 'shadow-sm', props.device.selected && 'bg-blue-200/45 dark:bg-dark-900/60']"
-    :body-style="{ padding: 0 }" class="w-full dark:bg-blue-gray-700/90 dark:border-blue-gray-900"
-  >
+    :body-style="{ padding: 0 }" class="w-full dark:bg-blue-gray-700/90 dark:border-blue-gray-900">
     <template #actions>
       <span key="connected">
         <a-tooltip>
           <template #title>Alimentation externe</template>
-          <span
-            v-if="props.device.battery2state === 1"
-            class="i-ph-plugs-connected-duotone text-base text-green-600 block ant-icon mx-auto my-1"
-          />
+          <span v-if="props.device.battery2state === 1"
+            class="i-ph-plugs-connected-duotone text-base text-green-600 block ant-icon mx-auto my-1" />
           <span v-else class="i-ph-plugs-duotone text-base text-red-600 block ant-icon mx-auto my-1" />
         </a-tooltip>
       </span>
@@ -40,14 +36,12 @@ const { t } = useI18n()
             {{ ((props.device.batterylevel * 100) / 7).toFixed(0) }} %
           </template>
           <span class="flex items-center h-27px">
-            <span
-              class="battery" :class="[
-                (props.device.batterylevel * 100) / 7 < 10 && 'low',
-                !props.device.batteryvoltage && 'inactive',
-              ]" :style="{
-                '--battery-level': `${(props.device.batterylevel * 100) / 7}%`,
-              }"
-            />
+            <span class="battery" :class="[
+              (props.device.batterylevel * 100) / 7 < 10 && 'low',
+              !props.device.batteryvoltage && 'inactive',
+            ]" :style="{
+  '--battery-level': `${(props.device.batterylevel * 100) / 7}%`,
+}" />
           </span>
         </a-tooltip>
       </span>
@@ -56,14 +50,10 @@ const { t } = useI18n()
           <template #title>Contact</template>
           <span class="flex items-center h-27px">
             <span class="relative mx-auto">
-              <span
-                class="i-ph-power-duotone text-base block"
-                :class="props.device.enginestate ? (props.device.enginestate === 3 ? 'text-green-500' : 'text-red-500') : 'text-gray-400'"
-              />
-              <a-badge
-                class="!absolute -top-10px -right-10px"
-                :status="props.device.enginestate ? (props.device.enginestate === 3 ? 'success' : 'error') : 'default'"
-              />
+              <span class="i-ph-power-duotone text-base block"
+                :class="props.device.enginestate ? (props.device.enginestate === 3 ? 'text-green-500' : 'text-red-500') : 'text-gray-400'" />
+              <a-badge class="!absolute -top-10px -right-10px"
+                :status="props.device.enginestate ? (props.device.enginestate === 3 ? 'success' : 'error') : 'default'" />
             </span>
           </span>
         </a-tooltip>
@@ -85,10 +75,8 @@ const { t } = useI18n()
             <span class="mx-auto">
               <span v-if="!props.device.csq" class="i-ph-wifi-x-thin block text-red-500 text-lg" />
               <span v-else-if="props.device.csq < 11" class="i-ph-wifi-low-thin block text-green-600 text-lg" />
-              <span
-                v-else-if="props.device.csq > 11 && props.device.csq < 31"
-                class="i-ph-wifi-medium-thin block text-green-600 text-lg"
-              />
+              <span v-else-if="props.device.csq > 11 && props.device.csq < 31"
+                class="i-ph-wifi-medium-thin block text-green-600 text-lg" />
               <span v-else class="i-ph-wifi-high-thin block text-green-600 text-lg" />
             </span>
           </span>
@@ -99,10 +87,8 @@ const { t } = useI18n()
           <template #title>GPS</template>
           <span class="flex items-center h-27px text-xs">
             <span class="mx-auto dark:text-light">
-              <span
-                key="ellipsis" class="i-ph-cell-signal-high-duotone text-sm inline-block ant-icon mx-auto mt-1"
-                :class="props.device.validitycode ? 'text-green-500' : 'text-red-500'"
-              />
+              <span key="ellipsis" class="i-ph-cell-signal-high-duotone text-sm inline-block ant-icon mx-auto mt-1"
+                :class="props.device.validitycode ? 'text-green-500' : 'text-red-500'" />
               <span v-if="props.device.satsinuse !== null">X{{ props.device.satsinuse }}</span>
             </span>
           </span>
@@ -168,19 +154,26 @@ const { t } = useI18n()
             </template>
             <h2 class="text-lg mb-0 dark:text-light-400">
               {{ `${props.device?.name}`.slice(0, 23) }}{{
-                `${props.device?.name}`.length > 23 ? '...' : null
+                  `${props.device?.name}`.length > 23 ? '...' : null
               }}
             </h2>
           </a-tooltip>
           <span class="text-xs text-right dark:text-light-400">{{
-            props.device.localizationdate &&
+              props.device.localizationdate &&
               dayjs(props.device.localizationdate).format('DD/MM/YYYY HH:mm:ss')
           }}</span>
         </div>
         <div class="flex items-center justify-between text-dark-50 dark:text-light-400 mb-0.5 text-xs">
           <div class="flex items-center">
             <span class="i-ph-map-pin-duotone block mb-1 mr-0.5" />
-            {{ props.device.adress || 'Pas d\'adresse pour ce device' }}
+            <span v-if="props.device?.adress">
+            {{ `${props.device?.adress}`.slice(0, 48) }}{{
+                `${props.device?.adress}`.length > 48 ? '...' : null
+            }}
+            </span>
+            <span v-else>
+              Pas d'adresse pour ce device
+            </span>
           </div>
           <div class="flex items-center">
             <a-popover :title="false">
@@ -196,7 +189,7 @@ const { t } = useI18n()
                         <div class="flex-grow mr-auto">
                           <span>
                             {{
-                              props.device.serialnumber
+                                props.device.serialnumber
                             }}{{ props.device.simcardNumber && ' | +' + props.device.simcardNumber }}
                           </span>
                         </div>
@@ -239,7 +232,7 @@ const { t } = useI18n()
 
       &:not(:last-child) {
         // border-right: 1px solid #f0f0f0;
-        @apply border-r-light-500 .dark:border-r-dark-500;
+        @apply border-r-light-500 dark:border-r-dark-500;
       }
     }
   }
@@ -351,7 +344,8 @@ const { t } = useI18n()
     }
   }
 }
+
 .ant-popover-inner-content {
-  @apply !p-1.5;
+  @apply  !p-1.5;
 }
 </style>
