@@ -23,7 +23,12 @@ const { height: alertDetailsRefHeight } = useElementSize(userDetailsRef)
 
 const getUsers = () => {
   usersLoading.value = true
-  apiServices(`/api/contact/${selectedClient.value}`).get().json().then(({ data }) => users.value = data.value)
+  apiServices(`/api/contact/${selectedClient.value}`).get().json().then(({ data }) => {
+    users.value = data.value
+
+    if (users.value.length)
+      selectedUser.value = users.value[0]
+  })
 
   usersLoading.value = false
 }
@@ -123,7 +128,7 @@ onMounted(() => {
             {{ user.firstname }}
             <span class="text-gray-400 dark:text-gray-500">
               {{ user.lastname }}
-            </span> 
+            </span>
           </span>
           <a-button danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
             @click.stop="deleteAlert(user)">
@@ -186,36 +191,56 @@ onMounted(() => {
             }}
           </a-descriptions-item>
         </a-descriptions>
-        <div>
+        <div v-if="userDetails">
           <a-tabs v-model:activeKey="activeTabKey">
             <a-tab-pane key="1" tab="Permissions">
-              <a-table :scroll="{ x: 450, y: windowHeight - 362 }" size="small" :loading="true"
-                :data-source="[]" :columns="[{
-                  title: 'Nom alerte',
-                  dataIndex: 'alertName',
-                  key: 'alertName',
+              <a-table :scroll="{ x: 450, y: windowHeight - 362 }" size="small" :loading="!userDetails" :data-source="userDetails.permissions || []"
+                :columns="[{
+                  title: 'Fonction',
+                  dataIndex: 'objecttype',
+                  key: 'objecttype',
                 },
                 {
-                  title: 'Nom device',
-                  dataIndex: 'deviceName',
-                  key: 'deviceName',
+                  title: 'Consulter',
+                  dataIndex: 'permission',
+                  key: 'r',
                 },
                 {
-                  title: 'Nom flotte',
-                  dataIndex: 'flotteName',
-                  key: 'flotteName',
+                  title: 'Créer',
+                  dataIndex: 'permission',
+                  key: 'n',
                 },
                 {
-                  title: 'Type d\'objet',
-                  dataIndex: 'objectType',
-                  key: 'objectType',
-                },]">
+                  title: 'Modifier',
+                  dataIndex: 'permission',
+                  key: 'm',
+                },
+                {
+                  title: 'Supprimer',
+                  dataIndex: 'permission',
+                  key: 'd',
+                },
+                {
+                  title: 'Tous',
+                  dataIndex: 'permission',
+                  key: 'all',
+                },
+                ]">
                 <template #bodyCell="{ column, record }">
-                  <template v-if="column.key === 'objectType'">
-                    <span class="flex items-center">
-                      <span :class="record.objectType === 'device' ? 'i-carbon-copy-file' : 'i-carbon-folder-details'"
-                        class="inline-block text-sm mr-1" /> {{ record.objectType }}
-                    </span>
+                  <template v-if="column.key === 'r'">
+                    <a-switch :checkedValue="!(record.permission?.indexOf('r') > -1) || false" size="small" />
+                  </template>
+                  <template v-else-if="column.key === 'n'">
+                    <a-switch :checkedValue="!(record.permission?.indexOf('n') > -1) || false" size="small" />
+                  </template>
+                  <template v-else-if="column.key === 'm'">
+                    <a-switch :checkedValue="!(record.permission?.indexOf('m') > -1) || false" size="small" />
+                  </template>
+                  <template v-else-if="column.key === 'd'">
+                    <a-switch :checkedValue="!(record.permission?.indexOf('d') > -1) || false" size="small" />
+                  </template>
+                  <template v-else-if="column.key === 'all'">
+                    <a-switch :checkedValue="!(record.permission?.indexOf('rnmd') > -1) || false" size="small" />
                   </template>
                 </template>
               </a-table>
