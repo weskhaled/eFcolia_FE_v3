@@ -105,7 +105,7 @@ onMounted(() => {
       <div
         class="flex border-light-600 dark:border-dark-900 border-b text-sm leading-15px p-2 m-0 bg-light-300 dark:bg-dark-700 w-full items-center">
         <h3 class="pl-15 md:pl-0 text-sm leading-32px dark:text-light-400 mr-auto my-auto">
-          {{ users.length }} Alerts
+          {{ users.length }} Users
         </h3>
         <a-button class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary" size="small"
           @click="() => visibleUserFormModal = true">
@@ -194,7 +194,11 @@ onMounted(() => {
         <div v-if="userDetails">
           <a-tabs v-model:activeKey="activeTabKey">
             <a-tab-pane key="1" tab="Permissions">
-              <a-table :scroll="{ x: 450, y: windowHeight - 362 }" size="small" :loading="!userDetails" :data-source="userDetails.permissions || []"
+              <a-table :scroll="{ x: 450, y: windowHeight - 380 }" size="small"
+                :loading="!userDetails"
+                :data-source="userDetails.permissions || []" :pagination="{
+                  pageSize: 100
+                }"
                 :columns="[{
                   title: 'Fonction',
                   dataIndex: 'objecttype',
@@ -246,6 +250,14 @@ onMounted(() => {
               </a-table>
             </a-tab-pane>
           </a-tabs>
+          <div class="flex justify-end p-3">
+            <a-button type="primary" class="flex items-center" @click="() => {
+              visibleUserFormModal = true
+            }">
+              <span class="i-carbon-edit inline-block text-white text-md mr-1" />
+              Update
+            </a-button>
+          </div>
         </div>
       </div>
     </div>
