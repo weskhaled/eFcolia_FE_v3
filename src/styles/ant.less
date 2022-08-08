@@ -1,14 +1,15 @@
 @import 'ant-design-vue/dist/antd.less';
 // @import 'ant-design-vue/dist/antd.dark.less';
-
-.ant-btn .anticon {
-    margin: auto;
-}
+// @import 'ant-design-vue/dist/antd.variable.min.css';
 
 // .ant-btn>.ant-btn-loading-icon .anticon,
 // .ant-btn>span {
 //  display: block!important;
 // }
+
+.ant-btn .anticon {
+    margin: auto;
+}
 
 .ant-form-vertical .ant-form-item-label {
     padding: 0 0 4px!important;
@@ -31,6 +32,6 @@
     display: block;
 }
 
-.ant-form-item-label > label {
-    @applay: !dark:color[rgba(255, 255, 255, 0.85)];
+.ant-form-item-label > label, .ant-input, .ant-input-affix-wrapper, .ant-input-password-icon.anticon {
+    @apply text-black;
 }

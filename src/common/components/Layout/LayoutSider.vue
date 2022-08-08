@@ -57,20 +57,17 @@ onMounted(() => {
         <template #title>
           <span>
             <span class="i-ph-monitor-duotone inline-block anticon text-lg" />
-            <span>nav 3</span>
+            <span>POI</span>
           </span>
         </template>
         <a-menu-item key="9">
-          option9
+          POI
         </a-menu-item>
         <a-menu-item key="10">
-          option10
+          Axe
         </a-menu-item>
         <a-menu-item key="11">
-          option11
-        </a-menu-item>
-        <a-menu-item key="12">
-          option12
+          Zone
         </a-menu-item>
       </a-sub-menu>
     </a-menu>

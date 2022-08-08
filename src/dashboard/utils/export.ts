@@ -1,6 +1,12 @@
 import type { WorkBook, WorkSheet } from 'xlsx'
 import { utils, writeFile } from 'xlsx'
 
+export const hasPermission: any = (permissions: any[], objectType: string, permission: string) =>
+  permissions.find((p) => p.objecttype === objectType) &&
+  permissions
+    .find((p) => p.objecttype === objectType)
+    .permission?.indexOf(permission) !== -1
+
 export const exportTypes: string[] = ['xlsx', 'xlsb', 'csv', 'html']
 export const exportFile = (data: any[], columns: [], type = 'xlsx'): void => {
   function SelectedHistoryCols(cols, row): any {

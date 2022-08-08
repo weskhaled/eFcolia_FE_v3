@@ -26,12 +26,12 @@ import { toggleDark } from '~/common/composables'
   width: 40px;
   height: 22px;
   flex-shrink: 0;
-  @apply bg-dark-500/30 dark: bg-gray-500/20 border-1px border-light-900/60 dark:border-light-500/50;
+  @apply bg-dark-500/30 dark:bg-gray-500/20 border-1px border-light-900/60 dark:border-light-500/50;
   transition: border-color 0.25s, background-color 0.25s;
 }
 
 .vt-switch:hover {
-  @apply border-dark-500/60 dark: border-gray-500/40;
+  @apply border-dark-500/60 dark:border-gray-500/40;
 }
 
 .vt-switch-check {

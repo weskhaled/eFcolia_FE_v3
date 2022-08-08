@@ -77,10 +77,10 @@ const addOrUpdateClient = async (formData: any) => {
   getClients()
 }
 
-const deleteAlert = (flotte: any) => {
+const deleteClient = (flotte: any) => {
   const { client_id, name } = flotte
 
-  const flotteIndex = flottes.value.findIndex(f => d?.client_id === client_id)
+  const flotteIndex = flottes.value.findIndex(d => d?.client_id === client_id)
   Modal.confirm({
     title: h('span', ['Do you want to delete these items? ', h('br'), h('span', { style: 'font-weight: 100;' }, name)]),
     icon: h('span', { class: 'i-ant-design-exclamation-circle-outlined anticon mr-1' }),
@@ -132,7 +132,7 @@ onMounted(() => {
             {{ flotte.commercialname }}
           </span>
           <a-button danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
-            @click.stop="deleteAlert(flotte)">
+            @click.stop="deleteClient(flotte)">
             <template #icon>
               <span class="anticon i-carbon-close-outline block text-base" />
             </template>

@@ -2,10 +2,13 @@
 import { Modal, message } from 'ant-design-vue'
 
 import { api as apiServices, urlSearchParams } from '~/common/composables'
-import { mdAndLarger, selectedClient, sideCollapsed } from '~/common/stores'
+import { mdAndLarger, selectedClient, sideCollapsed, treeDataClients } from '~/common/stores'
+
+// import { devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, selectedDevice, sideCollapsed, treeDataClients } from '~/common/stores'
 
 const users = ref<any>([])
 const usersLoading = ref<any>(true)
+const isNewUser = ref<any>(true)
 const objectTypes = ref<any>(null)
 const selectedUser = ref<any>(null)
 const userDetails = ref<any>(null)
@@ -54,9 +57,11 @@ watch(() => selectedUser.value, async (val) => {
   immediate: true,
 })
 
+
+
 const addOrUpdateUser = async (formData: any) => {
   if (formData.id !== null) {
-    const { error, statusCode } = await apiServices('/api/alert').put(formData).json()
+    const { error, statusCode } = await apiServices('/api/user').put(formData).json()
     if (statusCode.value !== 200)
       message.error(`${error.value}`)
     else
@@ -65,7 +70,7 @@ const addOrUpdateUser = async (formData: any) => {
 
   else {
     delete formData.id
-    const { error, statusCode } = await apiServices('/api/alert').post(formData).json()
+    const { error, statusCode } = await apiServices('/api/user').post(formData).json()
     if (statusCode.value !== 200)
       message.error(`${error.value}`)
     else
@@ -76,16 +81,16 @@ const addOrUpdateUser = async (formData: any) => {
   getUsers()
 }
 
-const deleteAlert = (user: any) => {
-  const { id, name } = user
+const deleteUser = (user: any) => {
+  const { id: userId, lastname } = user
 
-  const flotteIndex = users.value.findIndex(f => d?.id === id)
+  const userIndex = users.value.findIndex(u => u?.id === userId)
   Modal.confirm({
-    title: h('span', ['Do you want to delete these items? ', h('br'), h('span', { style: 'font-weight: 100;' }, name)]),
+    title: h('span', ['Do you want to delete these items? ', h('br'), h('span', { style: 'font-weight: 100;' }, lastname)]),
     icon: h('span', { class: 'i-ant-design-exclamation-circle-outlined anticon mr-1' }),
     content: 'When clicked the OK button, this device will removed',
     onOk() {
-      return apiServices(`/api/user/${id}`, { immediate: false }).delete().execute().then(() => flotteIndex && (delete users.value[flotteIndex])).catch(error => message.error(error))
+      return apiServices(`/api/user/${userId}`, { immediate: false }).delete().execute().then(() => userIndex && (delete users.value[userIndex])).catch(error => message.error(error))
     },
     cancelText: 'Cancel',
     onCancel() {
@@ -108,7 +113,7 @@ onMounted(() => {
           {{ users.length }} Users
         </h3>
         <a-button class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary" size="small"
-          @click="() => visibleUserFormModal = true">
+          @click="() => { isNewUser = true; visibleUserFormModal = true }">
           <template #icon>
             <span class="anticon i-carbon-add block text-base" />
           </template>
@@ -131,7 +136,7 @@ onMounted(() => {
             </span>
           </span>
           <a-button danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
-            @click.stop="deleteAlert(user)">
+            @click.stop="deleteUser(user)">
             <template #icon>
               <span class="anticon i-carbon-close-outline block text-base" />
             </template>
@@ -165,41 +170,27 @@ onMounted(() => {
       <div ref="userDetailsRef" class="p-0">
         <a-skeleton class="p-3" v-if="!userDetails" active />
         <a-descriptions v-if="users.length && selectedUser && userDetails" class="p-2">
-          <a-descriptions-item label="firstname">
-            {{ userDetails.firstname }}
+          <a-descriptions-item label="Firstname">
+            {{ userDetails.firstname || '--' }}
           </a-descriptions-item>
-          <a-descriptions-item label="lastname">
-            {{ userDetails?.lastname }}
+          <a-descriptions-item label="Lastname">
+            {{ userDetails?.lastname || '--' }}
           </a-descriptions-item>
-          <a-descriptions-item label="Active">
-            <a-badge :status="selectedUser.status === 1 ? 'processing' : 'error'"
-              :text="selectedUser.status === 1 ? 'Yes' : 'No'" />
+          <a-descriptions-item label="Post">
+            {{ userDetails?.post || '--' }}
           </a-descriptions-item>
-          <a-descriptions-item label="From">
-            {{ selectedUser.begindate }}
+          <a-descriptions-item label="Login">
+            {{ selectedUser.login }}
           </a-descriptions-item>
-          <a-descriptions-item label="To">
-            {{ selectedUser.enddate }}
-          </a-descriptions-item>
-          <a-descriptions-item label="Importance">
-            {{
-                selectedUser.level === 3
-                  ? 'Danger'
-                  : selectedUser.level === 2
-                    ? 'Warning'
-                    : 'Normal'
-            }}
+          <a-descriptions-item label="Creation Date">
+            {{ selectedUser.begindate || '--' }}
           </a-descriptions-item>
         </a-descriptions>
         <div v-if="userDetails">
           <a-tabs v-model:activeKey="activeTabKey">
             <a-tab-pane key="1" tab="Permissions">
-              <a-table :scroll="{ x: 450, y: windowHeight - 380 }" size="small"
-                :loading="!userDetails"
-                :data-source="userDetails.permissions || []" :pagination="{
-                  pageSize: 100
-                }"
-                :columns="[{
+              <a-table :scroll="{ x: 450, y: windowHeight - 340 }" size="small" :loading="!userDetails"
+                :data-source="userDetails.permissions || []" :pagination="false" :columns="[{
                   title: 'Fonction',
                   dataIndex: 'objecttype',
                   key: 'objecttype',
@@ -252,6 +243,7 @@ onMounted(() => {
           </a-tabs>
           <div class="flex justify-end p-3">
             <a-button type="primary" class="flex items-center" @click="() => {
+              isNewUser = false
               visibleUserFormModal = true
             }">
               <span class="i-carbon-edit inline-block text-white text-md mr-1" />
@@ -262,7 +254,8 @@ onMounted(() => {
       </div>
     </div>
   </div>
-  <UserFormModal v-model:visible="visibleUserFormModal" @addOrUpdateUser="addOrUpdateUser" />
+  <UserFormModal v-model:visible="visibleUserFormModal" :clients="treeDataClients" :object-types="objectTypes"
+    :user="selectedUser && userDetails && !isNewUser ? userDetails : null" @addOrUpdateUser="addOrUpdateUser" />
 </template>
 <style lang="less">
 .ant-tabs-tab {

@@ -99,7 +99,7 @@ const { width } = useWindowSize()
               </a>
             </a-menu-item>
             <a-menu-item>
-              <a href="javascript:;" class="flex items-center text-md leading-8">
+              <a href="javascript:;" @click="$router.push({name: 'dashboard-settings'})" class="flex items-center text-md leading-8">
                 <span class="i-carbon-settings inline-block mr-1" />
                 Settings
               </a>

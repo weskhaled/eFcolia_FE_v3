@@ -165,18 +165,27 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
     width: 130,
   },
 ])
+//TODO
+const InputValues = (sensors) => {
+  if(sensors+''.length < 10)
+    return '--'
+
+  let out = ''
+  if(sensors[0] <= 3 )
+    out += ''
+  
+  return '000N0NNNNN-00NNN'
+}
 </script>
 
 <template>
   <div ref="wrapperTableHistoryRef" class="h-full">
-    <a-table
-      :loading="!props.dataHistories" size="small" :pagination="{
-        size: 'small',
-        pageSize: 100,
-        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
-      }" :columns="columnsDeviceHistories.filter(col => !col.isHidden)" :data-source="props.dataHistories || []"
-      :scroll="{ x: columnsDeviceHistories.filter(col => !col.isHidden).length > 7 ? 3500 : 1000, y: height - 81 }"
-    >
+    <a-table :loading="!props.dataHistories" size="small" :pagination="{
+      size: 'small',
+      pageSize: 100,
+      showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`
+    }" :columns="columnsDeviceHistories.filter(col => !col.isHidden)" :data-source="props.dataHistories || []"
+      :scroll="{ x: columnsDeviceHistories.filter(col => !col.isHidden).length > 7 ? 3500 : 1000, y: height - 81 }">
       <template #headerCell="{ column }">
         <template v-if="column.key === 'operation'">
           <a-dropdown-button v-model:visible="visibleDropdownColumnsDeviceHistories" size="small">
@@ -194,19 +203,15 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
                   <div class="max-h-45 min-w-200px overflow-scroll">
                     <a-menu-item
                       v-for="columnsDevice in columnsDeviceHistories.filter(col => !(['operation', 'appdate'].includes(col.key)))"
-                      :key="columnsDevice.key" @click="() => columnsDevice.isHidden = !columnsDevice.isHidden"
-                    >
+                      :key="columnsDevice.key" @click="() => columnsDevice.isHidden = !columnsDevice.isHidden">
                       <a-checkbox :checked="!columnsDevice.isHidden">
                         {{ columnsDevice.title }}
                       </a-checkbox>
                     </a-menu-item>
                   </div>
                 </a-sub-menu>
-                <a-menu-item
-                  key="2"
-                  :disabled="!props.dataHistories?.length"
-                  @click="exportFile(props.dataHistories, columnsDeviceHistories)"
-                >
+                <a-menu-item key="2" :disabled="!props.dataHistories?.length"
+                  @click="exportFile(props.dataHistories, columnsDeviceHistories)">
                   <span class="flex items-center">
                     <span class="i-ph-file-xls-light anticon text-sm block mr-2" /> Export
                   </span>
@@ -220,9 +225,16 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
           </a-dropdown-button>
         </template>
       </template>
-      <template #bodyCell="{ column }">
+      <template #bodyCell="{ column, text, record }">
         <template v-if="column.key === 'operation'">
           <span class="i-ph-map-pin-duotone anticon text-sm block text-blue" />
+        </template>
+        <template v-if="column.dataIndex === 'enginestate'">
+          <span v-if="text === 3" class="text-green-400">ON</span>
+          <span v-else class="text-red-400">OFF</span>
+        </template>
+        <template v-if="column.dataIndex === 'sensors'">
+          <span>{{InputValues(record.sensors)}}</span>
         </template>
       </template>
     </a-table>
@@ -230,7 +242,7 @@ const columnsDeviceHistories: any = useStorage('columnsDeviceHistory', [
 </template>
 <style lang="less">
 .ant-table-pagination.ant-pagination {
-  @apply !m-0 !p-0.5rem;
+  @apply  !m-0 !p-0.5rem;
 }
 
 // .ant-table-placeholder {

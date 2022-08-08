@@ -176,6 +176,12 @@ export default defineConfig({
   },
   css: {
     preprocessorOptions: {
+      // less: {
+      //   javascriptEnabled: true,
+      //   additionalData: `
+      //     @import "~/styles/ant/variables.less";
+      //   `
+      // }
       less: {
         modifyVars: {
           '@primary-color': 'rgb(0, 123, 255); // primary color for all components',

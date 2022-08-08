@@ -6,7 +6,8 @@ import enUS from 'ant-design-vue/es/locale/en_US.js'
 
 import { userLang } from '~/common/stores'
 import { isDark } from '~/common/composables'
-
+const el: Ref<any> = ref(null)
+const color = useCssVar('--color-scheme', el, { initialValue: 'light' })
 dayjs.locale('en')
 // https://github.com/vueuse/head
 // you can use this to manipulate the document head in any components,
@@ -14,13 +15,13 @@ dayjs.locale('en')
 useHead({
   title: 'Efcolia',
   meta: [
-    { name: 'description', content: 'Opinionated Vite Starter Template' },
+    { name: 'description', content: 'Efcolia' },
   ],
 })
 const {
   load,
   unload,
-} = useStyleTag('@import \'https://unpkg.com/ant-design-vue@3.2.2/dist/antd.dark.css\';')
+} = useStyleTag('@import \'https://unpkg.com/ant-design-vue@3.3.0-beta.2/dist/antd.dark.css\';', { immediate: false })
 
 watch(isDark, (value) => {
   value ? load() : unload()
@@ -39,6 +40,9 @@ const colorState = reactive({
   warningColor: '#faad14',
   successColor: '#52c41a',
   infoColor: '#1890ff',
+})
+onMounted(() => {
+  el.value = document.documentElement
 })
 </script>
 
