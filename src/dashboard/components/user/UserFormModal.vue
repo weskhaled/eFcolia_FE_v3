@@ -22,6 +22,7 @@ const { t } = useI18n()
 const useForm = Form.useForm
 
 const modelRef: any = reactive({
+  id: null,
   firstname: '',
   lastname: '',
   clientId: null,
@@ -31,7 +32,7 @@ const modelRef: any = reactive({
   permissions: []
 })
 const rulesRef = reactive({
-  firstname: [
+  lastname: [
     {
       required: true,
       message: 'Please input name',
@@ -43,6 +44,7 @@ const onSubmit = () => {
   validate()
     .then(() => {
       const {
+        id,
         firstname,
         lastname,
         login,
@@ -51,6 +53,7 @@ const onSubmit = () => {
         permissions
       } = toRaw(modelRef)
       const formData = {
+        id,
         clientId: clientId || +selectedClient.value,
         firstname,
         lastname,
@@ -69,8 +72,10 @@ const onSubmit = () => {
     })
 }
 const resetForm = () => {
+  console.log(props.user)
   if (props.user) {
-    const { firstname, lastname, client_id: clientId, login, begindate, permissions } = props.user
+    const { user_id, firstname, lastname, client_id: clientId, login, begindate, permissions } = props.user
+    modelRef.id = user_id
     modelRef.firstname = firstname
     modelRef.lastname = lastname
     modelRef.begindate = begindate
@@ -102,6 +107,7 @@ const resetForm = () => {
   }
   else {
     resetFields()
+    modelRef.id = null
     modelRef.clientId = +selectedClient.value
 
     modelRef.permissions = props.objectTypes.map((o) => ({
@@ -169,10 +175,10 @@ const toggleAllPremission = (value, objectType) => {
     <div class="min-h-70 max-h-[calc(100vh-300px)] overflow-scroll p-5 pb-1">
       <a-form layout="vertical">
         <div class="grid-cols-2 grid gap-4">
-          <a-form-item label="First Name" v-bind="validateInfos.firstname">
+          <a-form-item label="First Name">
             <a-input v-model:value="modelRef.firstname" />
           </a-form-item>
-          <a-form-item label="Last Name">
+          <a-form-item label="Last Name" v-bind="validateInfos.lastname">
             <a-input v-model:value="modelRef.lastname" />
           </a-form-item>
         </div>

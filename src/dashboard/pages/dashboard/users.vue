@@ -60,12 +60,12 @@ watch(() => selectedUser.value, async (val) => {
 
 
 const addOrUpdateUser = async (formData: any) => {
-  if (formData.id !== null) {
+  if (formData.id) {
     const { error, statusCode } = await apiServices('/api/user').put(formData).json()
     if (statusCode.value !== 200)
       message.error(`${error.value}`)
     else
-      message.info(`Alert: ${formData.name} Updated`)
+      message.info(`User: ${formData.lastname} Updated`)
   }
 
   else {
@@ -74,7 +74,7 @@ const addOrUpdateUser = async (formData: any) => {
     if (statusCode.value !== 200)
       message.error(`${error.value}`)
     else
-      message.info(`Alert: ${formData.name} Added`)
+      message.info(`User: ${formData.lastname} Added`)
   }
 
   visibleUserFormModal.value = false
@@ -97,10 +97,10 @@ const deleteUser = (user: any) => {
     },
   })
 }
-onMounted(() => {
-  sideCollapsed.value = false
-  apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value = data.value)
-})
+
+sideCollapsed.value = false
+apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value = data.value)
+
 </script>
 
 <template>
