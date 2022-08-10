@@ -2,9 +2,11 @@
 import { Modal, message } from 'ant-design-vue'
 
 import { api as apiServices, urlSearchParams } from '~/common/composables'
-import { mdAndLarger, selectedClient, sideCollapsed, treeDataClients } from '~/common/stores'
+import { mdAndLarger, selectedClient, sideCollapsed, treeDataClients, currentUser } from '~/common/stores'
+import { hasPermission } from '~/dashboard/utils'
 
-// import { devices, devicesCount, devicesLoading, mdAndLarger, selectedClient, selectedDevice, sideCollapsed, treeDataClients } from '~/common/stores'
+
+const router = useRouter()
 
 const users = ref<any>([])
 const usersLoading = ref<any>(true)
@@ -64,8 +66,20 @@ const addOrUpdateUser = async (formData: any) => {
     const { error, statusCode } = await apiServices('/api/user').put(formData).json()
     if (statusCode.value !== 200)
       message.error(`${error.value}`)
-    else
+    else {
       message.info(`User: ${formData.lastname} Updated`)
+
+      if (formData.id === currentUser.value.user_id) {
+        const { data: dataUser, error } = await apiServices('/api/request/user').get().json()
+
+        if (error.value) {
+          await router.push('/auth')
+        }
+        else if (dataUser.value) {
+          currentUser.value = dataUser.value
+        }
+      }
+    }
   }
 
   else {
@@ -84,13 +98,20 @@ const addOrUpdateUser = async (formData: any) => {
 const deleteUser = (user: any) => {
   const { id: userId, lastname } = user
 
+  if (userId === currentUser.value.user_id) {
+    message.error(`You Cannot Delete Yourself`)
+    return
+  }
   const userIndex = users.value.findIndex(u => u?.id === userId)
   Modal.confirm({
     title: h('span', ['Do you want to delete these items? ', h('br'), h('span', { style: 'font-weight: 100;' }, lastname)]),
     icon: h('span', { class: 'i-ant-design-exclamation-circle-outlined anticon mr-1' }),
     content: 'When clicked the OK button, this device will removed',
     onOk() {
-      return apiServices(`/api/user/${userId}`, { immediate: false }).delete().execute().then(() => userIndex && (delete users.value[userIndex])).catch(error => message.error(error))
+      return apiServices(`/api/user/${userId}`, { immediate: false }).delete().execute().then(() => {
+        userIndex && (delete users.value[userIndex])
+        getUsers()
+      }).catch(error => message.error(error))
     },
     cancelText: 'Cancel',
     onCancel() {
@@ -112,7 +133,8 @@ apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value
         <h3 class="pl-15 md:pl-0 text-sm leading-32px dark:text-light-400 mr-auto my-auto">
           {{ users.length }} Users
         </h3>
-        <a-button class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary" size="small"
+        <a-button v-if="currentUser" :disabled="!hasPermission(currentUser.permissions, 'user', 'n')"
+          class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary" size="small"
           @click="() => { isNewUser = true; visibleUserFormModal = true }">
           <template #icon>
             <span class="anticon i-carbon-add block text-base" />
@@ -135,7 +157,8 @@ apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value
               {{ user.lastname }}
             </span>
           </span>
-          <a-button danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
+          <a-button :disabled="currentUser.user_id === user.id || !hasPermission(currentUser.permissions, 'user', 'd')" danger
+            class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
             @click.stop="deleteUser(user)">
             <template #icon>
               <span class="anticon i-carbon-close-outline block text-base" />
@@ -223,29 +246,30 @@ apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value
                 ]">
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'r'">
-                    <a-switch :checkedValue="!(record.permission?.indexOf('r') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('r') > -1) || false" size="small" />
                   </template>
                   <template v-else-if="column.key === 'n'">
-                    <a-switch :checkedValue="!(record.permission?.indexOf('n') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('n') > -1) || false" size="small" />
                   </template>
                   <template v-else-if="column.key === 'm'">
-                    <a-switch :checkedValue="!(record.permission?.indexOf('m') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('m') > -1) || false" size="small" />
                   </template>
                   <template v-else-if="column.key === 'd'">
-                    <a-switch :checkedValue="!(record.permission?.indexOf('d') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('d') > -1) || false" size="small" />
                   </template>
                   <template v-else-if="column.key === 'all'">
-                    <a-switch :checkedValue="!(record.permission?.indexOf('rnmd') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('rnmd') > -1) || false" size="small" />
                   </template>
                 </template>
               </a-table>
             </a-tab-pane>
           </a-tabs>
           <div class="flex justify-end p-3">
-            <a-button type="primary" class="flex items-center" @click="() => {
-              isNewUser = false
-              visibleUserFormModal = true
-            }">
+            <a-button :disabled="!hasPermission(currentUser.permissions, 'user', 'm')" type="primary"
+              class="flex items-center" @click="() => {
+                isNewUser = false
+                visibleUserFormModal = true
+              }">
               <span class="i-carbon-edit inline-block text-white text-md mr-1" />
               Update
             </a-button>

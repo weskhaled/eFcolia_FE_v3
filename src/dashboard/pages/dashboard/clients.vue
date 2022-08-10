@@ -2,7 +2,8 @@
 import { Modal, message } from 'ant-design-vue'
 
 import { api as apiServices, urlSearchParams } from '~/common/composables'
-import { mdAndLarger, selectedClient, sideCollapsed } from '~/common/stores'
+import { mdAndLarger, selectedClient, sideCollapsed, currentUser } from '~/common/stores'
+import { hasPermission } from '~/dashboard/utils'
 
 const flottes = ref<any>([])
 const flottesLoading = ref<any>(true)
@@ -111,7 +112,7 @@ onMounted(() => {
         <h3 class="pl-15 md:pl-0 text-sm leading-32px dark:text-light-400 mr-auto my-auto">
           {{ flottes.length }} Clients
         </h3>
-        <a-button class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary" size="small"
+        <a-button v-if="currentUser" :disabled="!hasPermission(currentUser.permissions, 'client', 'n')" class="flex items-center justify-center ml-0 flex-grow-0 ml-2" type="primary" size="small"
           @click="() => visibleAlertFormModal = true">
           <template #icon>
             <span class="anticon i-carbon-add block text-base" />
@@ -131,7 +132,7 @@ onMounted(() => {
           <span class="capitalize text-sm">
             {{ flotte.commercialname }}
           </span>
-          <a-button danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
+          <a-button :disabled="!hasPermission(currentUser.permissions, 'client', 'd')" danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
             @click.stop="deleteClient(flotte)">
             <template #icon>
               <span class="anticon i-carbon-close-outline block text-base" />
@@ -189,7 +190,7 @@ onMounted(() => {
             </a-descriptions-item>
           </a-descriptions>
           <div class="flex justify-end p-3">
-            <a-button type="primary" class="flex items-center" @click="() => {
+            <a-button :disabled="!hasPermission(currentUser.permissions, 'client', 'm')" type="primary" class="flex items-center" @click="() => {
               updateClient = true
               visibleAlertFormModal = true
             }">

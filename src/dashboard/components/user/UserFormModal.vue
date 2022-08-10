@@ -72,7 +72,6 @@ const onSubmit = () => {
     })
 }
 const resetForm = () => {
-  console.log(props.user)
   if (props.user) {
     const { user_id, firstname, lastname, client_id: clientId, login, begindate, permissions } = props.user
     modelRef.id = user_id

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 
+import { currentUser } from '~/common/stores'
+import { hasPermission } from '~/dashboard/utils'
+
 interface Props {
   device?: Ref<any>
 }
@@ -127,13 +130,13 @@ const { t } = useI18n()
                   <span>Reporting</span>
                 </span>
               </a-menu-item>
-              <a-menu-item @click="() => emit('update')">
+              <a-menu-item :disabled="!hasPermission(currentUser.permissions, 'device', 'm')" @click="() => emit('update')">
                 <span class="flex items-center leading-6">
                   <span class="i-ph-pencil-thin anticon text-blue-600 mr-1" />
                   <span>Modifier</span>
                 </span>
               </a-menu-item>
-              <a-menu-item @click="() => emit('delete')">
+              <a-menu-item :disabled="!hasPermission(currentUser.permissions, 'device', 'd')" @click="() => emit('delete')">
                 <span class="flex items-center leading-6">
                   <span class="i-ph-x-duotone anticon text-red-600 mr-1" />
                   <span>Supprimer</span>
