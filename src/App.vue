@@ -21,7 +21,7 @@ useHead({
 const {
   load,
   unload,
-} = useStyleTag('@import \'https://unpkg.com/ant-design-vue@3.3.0-beta.2/dist/antd.dark.css\';', { immediate: false })
+} = useStyleTag('@import \'https://unpkg.com/ant-design-vue@3.2.11/dist/antd.dark.css\';', { immediate: false })
 
 watch(isDark, (value) => {
   value ? load() : unload()

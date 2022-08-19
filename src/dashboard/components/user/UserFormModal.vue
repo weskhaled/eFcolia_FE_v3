@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import { Form, message } from 'ant-design-vue'
-import { selectedClient } from '~/common/stores'
+import { selectedClient, mdAndLarger } from '~/common/stores'
 import { api as apiServices } from '~/common/composables'
 
 interface Props {
@@ -165,7 +165,8 @@ const toggleAllPremission = (value, objectType) => {
 </script>
 
 <template>
-  <a-modal width="55%" style="top: 70px" destroy-on-close :body-style="{ padding: 0 }" @after-close="resetFields()">
+  <a-modal :width="mdAndLarger ? '65%' : '95%'" :style="{ top: mdAndLarger ? '70px' : '45px' }" destroy-on-close :body-style="{ padding: 0 }"
+    @after-close="resetFields()">
     <template #title>
       <span>
         {{ user?.firstname ? `Update ${user.firstname}` : 'Add' }}
@@ -173,7 +174,7 @@ const toggleAllPremission = (value, objectType) => {
     </template>
     <div class="min-h-70 max-h-[calc(100vh-300px)] overflow-scroll p-5 pb-1">
       <a-form layout="vertical">
-        <div class="grid-cols-2 grid gap-4">
+        <div class="sm:grid-cols-2 grid gap-4">
           <a-form-item label="First Name">
             <a-input v-model:value="modelRef.firstname" />
           </a-form-item>
@@ -181,7 +182,7 @@ const toggleAllPremission = (value, objectType) => {
             <a-input v-model:value="modelRef.lastname" />
           </a-form-item>
         </div>
-        <div class="grid-cols-2 grid gap-4">
+        <div class="sm:grid-cols-2 grid gap-4">
           <a-form-item label="Login" v-bind="validateInfos.login">
             <a-input v-model:value="modelRef.login" />
           </a-form-item>
@@ -190,7 +191,7 @@ const toggleAllPremission = (value, objectType) => {
           </a-form-item>
         </div>
 
-        <div class="grid-cols-1 grid gap-0">
+        <div class="grid-cols-1 grid gap-4">
           <a-form-item label="Client" v-bind="validateInfos.clientId">
             <a-tree-select v-model:value="modelRef.clientId" show-search class="w-full md:min-w-70"
               tree-node-filter-prop="title" :dropdown-style="{ maxHeight: '400px', overflow: 'auto' }"
@@ -210,7 +211,6 @@ const toggleAllPremission = (value, objectType) => {
                   title: 'Fonction',
                   dataIndex: 'objecttype',
                   key: 'objecttype',
-                  width: 240,
                 },
                 {
                   title: 'Consulter',

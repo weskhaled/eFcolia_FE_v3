@@ -148,7 +148,8 @@ apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value
         :style="[`max-height: calc(${mdAndLarger ? (alertDetailsRefHeight > windowHeight ? alertDetailsRefHeight + 15 + 'px' : windowHeight - 105 + 'px') : '100vh - 155px'})`]">
         <div v-for="(user, index) in users.filter(f => f.id)" :key="user.id"
           class="mb-1 p-2 flex items-center mx-1 rounded-sm cursor-pointer"
-          :class="[index === 0 && 'mt-1', (selectedUser && (selectedUser.id === user.id)) ? 'bg-light-900 dark:bg-dark-400' : 'bg-light-500 dark:bg-dark-700']"
+          :class="[index === 0 && 'mt-1', (selectedUser && (selectedUser.id === user.id)) ? 'bg-light-900 dark:bg-dark-400' : 'bg-light-500 dark:bg-dark-700',
+          currentUser.user_id === user.id && 'border-l-2 border-red-500']"
           @click="selectedUser = user">
           <span class="i-carbon-warning-alt-filled text-yellow-500 text-sm block mr-1 flex-grow-0 items-center" />
           <span class="capitalize text-sm">
@@ -157,8 +158,8 @@ apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value
               {{ user.lastname }}
             </span>
           </span>
-          <a-button :disabled="currentUser.user_id === user.id || !hasPermission(currentUser.permissions, 'user', 'd')" danger
-            class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
+          <a-button :disabled="currentUser.user_id === user.id || !hasPermission(currentUser.permissions, 'user', 'd')"
+            danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
             @click.stop="deleteUser(user)">
             <template #icon>
               <span class="anticon i-carbon-close-outline block text-base" />
@@ -246,19 +247,24 @@ apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value
                 ]">
                 <template #bodyCell="{ column, record }">
                   <template v-if="column.key === 'r'">
-                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('r') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('r') > -1) || false"
+                      size="small" />
                   </template>
                   <template v-else-if="column.key === 'n'">
-                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('n') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('n') > -1) || false"
+                      size="small" />
                   </template>
                   <template v-else-if="column.key === 'm'">
-                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('m') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('m') > -1) || false"
+                      size="small" />
                   </template>
                   <template v-else-if="column.key === 'd'">
-                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('d') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('d') > -1) || false"
+                      size="small" />
                   </template>
                   <template v-else-if="column.key === 'all'">
-                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('rnmd') > -1) || false" size="small" />
+                    <a-switch :disabled="true" :checkedValue="!(record.permission?.indexOf('rnmd') > -1) || false"
+                      size="small" />
                   </template>
                 </template>
               </a-table>
