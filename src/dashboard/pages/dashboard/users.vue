@@ -144,21 +144,20 @@ apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value
       <div v-if="users.length" :class="!top ? 'opacity-100%' : 'opacity-0'"
         class="pointer-events-none absolute top-12 z-20 w-full h-5 transition-all"
         style="box-shadow: inset 0px 10px 8px -8px rgba(0,0,0,0.2);" />
-      <div ref="alertsListRef" class="overflow-y-scroll max-h-[calc(100vh-155px)]"
+      <div ref="alertsListRef" class="users-list overflow-y-scroll max-h-[calc(100vh-155px)] overflow-x-hidden h-full"
         :style="[`max-height: calc(${mdAndLarger ? (alertDetailsRefHeight > windowHeight ? alertDetailsRefHeight + 15 + 'px' : windowHeight - 105 + 'px') : '100vh - 155px'})`]">
         <div v-for="(user, index) in users.filter(f => f.id)" :key="user.id"
-          class="mb-1 p-2 flex items-center mx-1 rounded-sm cursor-pointer"
-          :class="[index === 0 && 'mt-1', (selectedUser && (selectedUser.id === user.id)) ? 'bg-light-900 dark:bg-dark-400' : 'bg-light-500 dark:bg-dark-700',
-          currentUser.user_id === user.id && 'border-l-2 border-red-500']"
-          @click="selectedUser = user">
+          class="mb-1 p-2 flex items-center mx-1 rounded-sm cursor-pointer relative h-40px" :class="[index === 0 && 'mt-1', (selectedUser && (selectedUser.id === user.id)) ? 'bg-light-900 dark:bg-dark-400' : 'bg-light-500 dark:bg-dark-700',
+          currentUser.user_id === user.id && 'border-l-2 border-red-500']" @click="selectedUser = user">
           <span class="i-carbon-warning-alt-filled text-yellow-500 text-sm block mr-1 flex-grow-0 items-center" />
+          <a-badge-ribbon class="absolute top-0 !right-1px" v-if="currentUser.user_id === user.id" text="You" />
           <span class="capitalize text-sm">
             {{ user.firstname }}
             <span class="text-gray-400 dark:text-gray-500">
               {{ user.lastname }}
             </span>
           </span>
-          <a-button :disabled="currentUser.user_id === user.id || !hasPermission(currentUser.permissions, 'user', 'd')"
+          <a-button v-if="currentUser.user_id !== user.id" :disabled="currentUser.user_id === user.id || !hasPermission(currentUser.permissions, 'user', 'd')"
             danger class="flex items-center justify-center ml-auto flex-grow-0 ml-2" type="primary" size="small"
             @click.stop="deleteUser(user)">
             <template #icon>
@@ -294,6 +293,12 @@ apiServices(`/api/objectType`).get().json().then(({ data }) => objectTypes.value
 
 .ant-table-pagination.ant-pagination {
   @apply m-2;
+}
+
+.users-list {
+  .ant-ribbon-wrapper {
+    position: initial;
+  }
 }
 </style>
 <route lang="yaml">

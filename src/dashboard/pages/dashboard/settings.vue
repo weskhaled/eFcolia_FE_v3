@@ -2,8 +2,6 @@
 import { api as apiServices, urlSearchParams, isDark, toggleDark } from '~/common/composables'
 import { currentUser, mdAndLarger, selectedClient, sideCollapsed } from '~/common/stores'
 
-const { height: windowHeight } = useWindowSize()
-
 const activeKey = ref('1')
 </script>
 

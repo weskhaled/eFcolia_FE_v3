@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import 'dayjs/locale/fr'
-import frFR from 'ant-design-vue/es/locale/fr_FR.js'
-import enUS from 'ant-design-vue/es/locale/en_US.js'
+import frFR from 'ant-design-vue/lib/locale/fr_FR.js'
+import enUS from 'ant-design-vue/lib/locale/en_US.js'
 
 import { userLang } from '~/common/stores'
 import { isDark } from '~/common/composables'
