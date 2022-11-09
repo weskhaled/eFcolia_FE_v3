@@ -39,13 +39,13 @@ const { t } = useI18n()
 const mapRef: Ref<HTMLElement | null> = ref(null)
 const compRef: Ref<HTMLElement | null> = ref(null)
 const controlRefTOPCENTER: Ref<HTMLElement | null> = ref(null)
-const showContentControlRefTOPCENTER = ref(false)
+const showContentControlRefTOPCENTER = ref(true)
 
 const map: any = ref(null)
 const api: any = ref(null)
 let infoWindow: any = null
 let historyPath: any = null
-let historyPaths: any = []
+const historyPaths: any = []
 let latlngbounds: any = null
 let markers: any = []
 let markerClusterer: any = null
@@ -79,103 +79,114 @@ const centerMapView = () => {
     map.value.fitBounds(latlngbounds)
   }
 }
-const histories = computed(() => props.showDevices?.value ? [] : props.dataHistories
-  ?.filter(p => p.latitude && p.longitude)?.filter((__position, index, selfArray) =>
-    selfArray[index]?.latitude !== selfArray[index + 1]?.latitude && selfArray[index]?.longitude !== selfArray[index + 1]?.longitude
-  )
-  ?.map(({
-    latitude: lat,
-    longitude: lng,
-    speed,
-    localizationdate,
-    adress,
-    temperature1,
-    enginestate
-  }) => {
-    const position = {
-      lat,
-      lng,
+const histories = computed(() => props.showDevices?.value
+  ? []
+  : props.dataHistories
+    ?.filter(p => p.latitude && p.longitude)?.filter((__position, index, selfArray) =>
+      selfArray[index]?.latitude !== selfArray[index + 1]?.latitude && selfArray[index]?.longitude !== selfArray[index + 1]?.longitude,
+    )
+    ?.map(({
+      latitude: lat,
+      longitude: lng,
       speed,
       localizationdate,
       adress,
       temperature1,
-      enginestate
-    }
+      enginestate,
+    }) => {
+      const position = {
+        lat,
+        lng,
+        speed,
+        localizationdate,
+        adress,
+        temperature1,
+        enginestate,
+      }
 
-    return position as google.maps.LatLngLiteral
-  }) || [])
+      return position as google.maps.LatLngLiteral
+    }) || [])
 
-watch(() => histories.value, async (val) => {
+watch(() => histories.value, async(val) => {
   if (!map.value)
     return
 
-  historyPaths.forEach(element => element.setMap(null));
-  if (markerClusterer) {
+  historyPaths.forEach(element => element.setMap(null))
+  if (markerClusterer)
     markerClusterer.clearMarkers()
-    markerClusterer.addMarkers(markers)
-  }
 
-  if (!val.length) {
+  if (!val.length)
     return
-  }
 
   markers = []
-  markers.push(new google.maps.Marker({
-    position: val[0],
-    icon: `https://api.iconify.design/ph:map-pin-duotone.svg?width=25px&height=25px&color=%2300ff00`,
-    label: {
-      text: `Start`,
-      className: 'bg-white text-black dark:bg-dark-600 !dark:text-light-300 relative -top-6 p-1 text-sm rounded-sm',
-    },
-    opacity: 1,
-    map: map.value
-  }),
-    new google.maps.Marker({
-      position: val[val.length - 1],
-      icon: `https://api.iconify.design/ph:map-pin-duotone.svg?width=25px&height=25px&color=%23ff0000`,
-      label: {
-        text: `End`,
-        className: 'bg-white text-black dark:bg-dark-600 !dark:text-light-300 relative -top-6 p-1 text-sm rounded-sm',
-      },
-      opacity: 1,
-      map: map.value
-    }))
-  for (let i = 0; i < val.length - 1; i++) {
-    historyPaths.push(new google.maps.Polyline({
-      path: [val[i], val[i + 1]],
-      strokeColor: (val[i].speed + val[i + 1].speed) / 2 > 50 ? '#FF0000' : '#00AAFF',
-      strokeOpacity: 1.0,
-      strokeWeight: 4,
-      map: map.value
-    }));
-    if (i > 0 && +val[i].speed === 0) {
-      const marker = new google.maps.Marker({
-        position: val[i],
-        icon: `https://api.iconify.design/openmoji:stop-sign.svg?width=25px&height=25px&color=%2300ff00`,
+  if (val.length > 2) {
+    markers.push(
+      new google.maps.Marker({
+        position: val[0],
+        icon: 'https://api.iconify.design/ph:map-pin-duotone.svg?width=25px&height=25px&color=%2300ff00',
+        label: {
+          text: 'Start',
+          className: 'bg-white text-black dark:bg-dark-600 !dark:text-light-300 relative -top-6 p-1 text-sm rounded-sm',
+        },
         opacity: 1,
         map: map.value,
-      })
-      marker.addListener("click", () => {
-        infoWindow.setContent(`
+      }),
+      new google.maps.Marker({
+        position: val[val.length - 1],
+        icon: 'https://api.iconify.design/ph:map-pin-duotone.svg?width=25px&height=25px&color=%23ff0000',
+        label: {
+          text: 'End',
+          className: 'bg-white text-black dark:bg-dark-600 !dark:text-light-300 relative -top-6 p-1 text-sm rounded-sm',
+        },
+        opacity: 1,
+        map: map.value,
+      }))
+    for (let i = 0; i < val.length - 1; i++) {
+      historyPaths.push(new google.maps.Polyline({
+        path: [val[i], val[i + 1]],
+        strokeColor: (val[i].speed + val[i + 1].speed) / 2 > 50 ? '#FF0000' : '#00AAFF',
+        strokeOpacity: 1.0,
+        strokeWeight: 4,
+        map: map.value,
+      }))
+      if (i > 0 && +val[i].speed === 0) {
+        const marker = new google.maps.Marker({
+          position: val[i],
+          icon: 'https://api.iconify.design/openmoji:stop-sign.svg?width=25px&height=25px&color=%2300ff00',
+          opacity: 1,
+          map: map.value,
+        })
+        marker.addListener('click', () => {
+          infoWindow.setContent(`
           <h3 class="text-xs text-gray-700 mb-1"><span class="text-gray-500">Date: </span>${val[i].localizationdate}</h3>
           <h3 class="text-xs text-gray-700 mb-1"><span class="text-gray-500">Adress: </span>${val[i].adress}</h3>
           <h3 class="text-xs text-gray-700 mb-1"><span class="text-gray-500">Temperature: </span>${val[i].temperature1}</h3>
           <h3 class="text-xs text-gray-700 mb-1"><span class="text-gray-500">EngineState: </span>${val[i].enginestate}</h3>
           <h3 class="text-xs text-gray-700"><span class="text-gray-500">Speed: </span>${val[i].speed}</h3>
         `)
-        infoWindow.open({
-          anchor: marker,
-          map: map.value,
-          shouldFocus: false,
-        });
-      });
-      markers.push(marker)
+          infoWindow.open({
+            anchor: marker,
+            map: map.value,
+            shouldFocus: false,
+          })
+        })
+        markers.push(marker)
+      }
+      latlngbounds?.extend(val[i + 1])
     }
-    latlngbounds?.extend(val[i + 1])
+    // await nextTick()
+    map.value.setCenter(latlngbounds.getCenter())
+    map.value.fitBounds(latlngbounds)
   }
-  await nextTick()
-  map.value.setCenter(latlngbounds.getCenter())
-  map.value.fitBounds(latlngbounds)
+
+  if (!markerClusterer) {
+    markerClusterer = new MarkerClusterer({ markers })
+    markerClusterer.setMap(map.value)
+  }
+  else {
+    markerClusterer.clearMarkers()
+    markerClusterer.addMarkers(markers)
+  }
 })
 watch(() => [props.devices, props.showDevices], ([valDevices, valShowDevices]) => {
   if (!map.value)
@@ -191,7 +202,7 @@ watch(() => [props.devices, props.showDevices], ([valDevices, valShowDevices]) =
   // Add markers to the map.
   markers = valDevices.map(({ id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected }) => {
     // selected && (selectedDevice.value = { id, latitude: lat, longitude: lng, name, gprsstate: gprsState, selected })
-    const marker = new google.maps.Marker({
+    const marker = new api.value.Marker({
       position: { lat, lng },
       icon: `https://api.iconify.design/ic:sharp-directions-car.svg?width=25px&height=25px&color=%23${gprsState ? '00aa00' : 'aa0000'}`,
       label: {
@@ -266,7 +277,7 @@ const addDrawingManager = () => {
   drawingManager.setMap(map.value)
 }
 
-(async () => {
+(async() => {
   await until(mapRef).not.toBeNull()
 
   await new Loader(LOADER_OPTIONS).load()
@@ -277,27 +288,37 @@ const addDrawingManager = () => {
     content: 'infoWindow',
     disableAutoPan: true,
   })
-  historyPath = new google.maps.Polyline
-  latlngbounds = new google.maps.LatLngBounds
+  historyPath = new google.maps.Polyline()
+  latlngbounds = new google.maps.LatLngBounds()
   mapOptions.mapTypeId = google.maps.MapTypeId.ROADMAP
+  markerClusterer = new MarkerClusterer({
+    map: map.value,
+    markers: [],
+  })
+  deleteMarkers()
+  addDrawingManager()
+  if (slots.default && slots.default().findIndex(o => o.type !== Comment) !== -1) {
+    showContentControlRefTOPCENTER.value = true
+    map.value.controls[api.value.ControlPosition.TOP_CENTER].push(controlRefTOPCENTER.value)
+  }
 })()
 
-  ; (async () => {
-    await until(map).not.toBeNull()
+// (async() => {
+//   await until(map).not.toBeNull()
 
-    markers = []
-    addDrawingManager()
+//   deleteMarkers()
+//   addDrawingManager()
 
-    if (slots.default && slots.default().findIndex(o => o.type !== Comment) !== -1) {
-      showContentControlRefTOPCENTER.value = true
-      map.value.controls[api.value.ControlPosition.TOP_CENTER].push(controlRefTOPCENTER.value)
-    }
-    // map.value.addListener('zoom_changed', reinsertMarkers)
-    // map.value.addListener('zoom_changed', () => markerClusterer && markerClusterer.redraw())
-    // markerCluster.value = new MarkerClusterer({
-    //   markers: markers(props.devices, map.value),
-    // })
-  })()
+//   if (slots.default && slots.default().findIndex(o => o.type !== Comment) !== -1) {
+//     showContentControlRefTOPCENTER.value = true
+//     map.value.controls[api.value.ControlPosition.TOP_CENTER].push(controlRefTOPCENTER.value)
+//   }
+//   // map.value.addListener('zoom_changed', reinsertMarkers)
+//   // map.value.addListener('zoom_changed', () => markerClusterer && markerClusterer.redraw())
+//   // markerClusterer.value = new MarkerClusterer({
+//   //   markers: markers(props.devices, map.value),
+//   // })
+// })()
 const addRectangle = (bounds = {
   north: 44.599,
   south: 44.49,
