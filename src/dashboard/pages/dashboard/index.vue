@@ -128,9 +128,15 @@ const onSearchDevice = async(term: string) => {
   resume()
 }
 
-watch([showDeviceDetails, activeKeyDeviceDetails], ([valShowDeviceDetails, valActiveKeyDeviceDetails]) => {
+watch([showDeviceDetails, activeKeyDeviceDetails, deviceDetailsDateRange], ([valShowDeviceDetails, valActiveKeyDeviceDetails, valDeviceDetailsDateRange]) => {
   urlSearchParams.showDeviceDetails = valShowDeviceDetails || null
   urlSearchParams.activeKeyDeviceDetails = valActiveKeyDeviceDetails || null
+
+  if(valDeviceDetailsDateRange[0] && valDeviceDetailsDateRange[1]) {
+    urlSearchParams.deviceDetailsDateRange = encodeURIComponent(JSON.stringify({"from": `${valDeviceDetailsDateRange[0].format('YYYY-MM-DD 00:00:00')}`, "to": `${valDeviceDetailsDateRange[1].format('YYYY-MM-DD 00:00:00')}`}))
+  } else {
+    urlSearchParams.deviceDetailsDateRange = null
+  }
 })
 
 watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async() => {
@@ -183,6 +189,7 @@ watch(selectedClient, async(val) => {
     const findedDevice = devices.value.find(d => +d.id === +urlSearchParams.deviceId)
     await nextTick()
     if (findedDevice) {
+      selectedDevice.value = findedDevice
       findedDevice.selected = true
 
       const indexOfDevice = devices.value.findIndex(d => d.id === findedDevice.id)
@@ -191,6 +198,11 @@ watch(selectedClient, async(val) => {
       useTimeoutFn(() => {
         urlSearchParams.activeKeyDeviceDetails && (activeKeyDeviceDetails.value = urlSearchParams.activeKeyDeviceDetails)
         showDeviceDetails.value = !!urlSearchParams.showDeviceDetails
+        const deviceDetailsDateRangeUrl = JSON.parse(decodeURIComponent(urlSearchParams.deviceDetailsDateRange))
+
+        if(deviceDetailsDateRangeUrl?.from && deviceDetailsDateRangeUrl?.to) {
+          deviceDetailsDateRange.value = [dayjs(deviceDetailsDateRangeUrl.from), dayjs(deviceDetailsDateRangeUrl.to)]
+        }
 
         if (gmapRef.value) {
           gmapRef.value.mapOptions.center = { lat: findedDevice.latitude, lng: findedDevice.longitude }
@@ -369,10 +381,10 @@ const addOrUpdateDevice = async(formData: any) => {
           <DevicesList
             ref="devicesListRef" v-model:devices="devices" v-model:devices-count="devicesCount"
             v-model:devices-loading="devicesLoading" @on-search-device="onSearchDevice" @device-clicked="deviceClicked"
-            @on-load-more="onLoadMore" @show-details="(device) => {
+            @on-load-more="onLoadMore"
+            @show-details="(device) => {
               selectedDevice = device;
               showDeviceDetails = true;
-              urlSearchParams.deviceId = selectedDevice.value?.id || '';
               activeKeyDeviceDetails = 'details';
             }" @show-history="(device) => {
               selectedDevice = device;
@@ -464,7 +476,7 @@ const addOrUpdateDevice = async(formData: any) => {
                 <DeviceHistoryStatistics :data-histories="dataHistories" />
               </a-tab-pane>
               <template v-if="activeKeyDeviceDetails !== 'details'" #rightExtra>
-                <div class="bg-white dark:bg-dark-300 mr-3px rounded-2px">
+                <div class="bg-white/60 dark:bg-white/5 mr-3px rounded-2px">
                   <a-range-picker
                     v-model:value="deviceDetailsDateRange"
                     :show-time="false"
