@@ -50,7 +50,7 @@ const restrictedY = computed(() =>
   clamp(top.value - 2, y.value, bottom.value - height.value),
 )
 
-const { pause, resume, isActive } = useIntervalFn(async() => {
+const { pause, resume, isActive } = useIntervalFn(async () => {
   if (!selectedClient.value)
     return
   const { data } = await apiServices(`/api/device/synchro/${selectedClient.value}`).get().json()
@@ -82,7 +82,7 @@ const markerClicked = (deviceId) => {
   }
 }
 
-const onLoadMore = async(refresh = false) => {
+const onLoadMore = async (refresh = false) => {
   pause()
   const length = devices.value.length
   if (length < devicesCount.value - 1 || refresh) {
@@ -99,7 +99,7 @@ const onLoadMore = async(refresh = false) => {
   resume()
 }
 
-const onSearchDevice = async(term: string) => {
+const onSearchDevice = async (term: string) => {
   pause()
   devicesLoading.value = true
   if (term.length > 3) {
@@ -128,43 +128,39 @@ const onSearchDevice = async(term: string) => {
   resume()
 }
 
-watch([showDeviceDetails, activeKeyDeviceDetails, deviceDetailsDateRange], ([valShowDeviceDetails, valActiveKeyDeviceDetails, valDeviceDetailsDateRange]) => {
+watch([showDeviceDetails, activeKeyDeviceDetails], ([valShowDeviceDetails, valActiveKeyDeviceDetails]) => {
   urlSearchParams.showDeviceDetails = valShowDeviceDetails || null
   urlSearchParams.activeKeyDeviceDetails = valActiveKeyDeviceDetails || null
+})
 
-  if(valDeviceDetailsDateRange[0] && valDeviceDetailsDateRange[1]) {
-    urlSearchParams.deviceDetailsDateRange = encodeURIComponent(JSON.stringify({"from": `${valDeviceDetailsDateRange[0].format('YYYY-MM-DD 00:00:00')}`, "to": `${valDeviceDetailsDateRange[1].format('YYYY-MM-DD 00:00:00')}`}))
+watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async ([valSelectedDevice, valShowDeviceDetails, valDeviceDetailsDateRange]) => {
+  urlSearchParams.deviceId = valSelectedDevice?.id || null
+
+  let from = null
+  let to = null
+  if (valDeviceDetailsDateRange && valDeviceDetailsDateRange?.length > 1) {
+    from = valDeviceDetailsDateRange[0].format('YYYY-MM-DD 00:00:00')
+    to = valDeviceDetailsDateRange[1].format('YYYY-MM-DD 23:59:59')
+    urlSearchParams.deviceDetailsDateRange = encodeURIComponent(JSON.stringify({ "from": from, "to": to }))
   } else {
     urlSearchParams.deviceDetailsDateRange = null
   }
-})
-
-watch([selectedDevice, showDeviceDetails, deviceDetailsDateRange], async() => {
-  urlSearchParams.deviceId = selectedDevice.value?.id || null
-
-  const dateRange = unref(deviceDetailsDateRange)
-  let from = null
-  let to = null
-  if (dateRange && dateRange?.length > 1) {
-    from = dateRange[0].format('YYYY-MM-DD 00:00:00')
-    to = dateRange[1].format('YYYY-MM-DD 23:59:59')
-  }
-  if (selectedDevice.value && showDeviceDetails.value) {
+  if (valSelectedDevice && valShowDeviceDetails) {
     pause()
     showDevicesInMap.value = false
     dataHistories.value = null
-    const { data } = await apiServices(`/api/history/${selectedDevice.value.id}?from=${from}&to=${to}`).get().json()
+    const { data } = await apiServices(`/api/history/${valSelectedDevice.id}?from=${from}&to=${to}`).get().json()
 
     data.value && (dataHistories.value = data.value)
   }
-  else if (!showDeviceDetails.value) {
-    resume()
+  else if (!valShowDeviceDetails) {
     showDevicesInMap.value = true
     dataHistories.value = null
+    resume()
   }
 })
 
-watch(selectedClient, async(val) => {
+watch(selectedClient, async (val) => {
   if (!val)
     return
 
@@ -176,7 +172,7 @@ watch(selectedClient, async(val) => {
   }
   devicesLoading.value = true
   showDeviceDetails.value = false
-  selectedDevice.value = null
+
   const { data } = await apiServices(`api/device/byClientId/${val}?skip=0`).get().json()
   const devicesData: any = unref(data)
   if (devicesData) {
@@ -187,9 +183,15 @@ watch(selectedClient, async(val) => {
     // const { data: dataDevice } = await service.get(`/api/device/byClientId/${val}/${+urlSearchParams.deviceId}`)
     // console.log(dataDevice)
     const findedDevice = devices.value.find(d => +d.id === +urlSearchParams.deviceId)
-    await nextTick()
+    // await nextTick()
+    if (urlSearchParams.deviceDetailsDateRange) {
+      const deviceDetailsDateRangeUrl = JSON.parse(decodeURIComponent(urlSearchParams.deviceDetailsDateRange))
+
+      if(deviceDetailsDateRangeUrl?.from && deviceDetailsDateRangeUrl?.to) {
+        deviceDetailsDateRange.value = [dayjs(deviceDetailsDateRangeUrl.from), dayjs(deviceDetailsDateRangeUrl.to)]
+      }
+    }
     if (findedDevice) {
-      selectedDevice.value = findedDevice
       findedDevice.selected = true
 
       const indexOfDevice = devices.value.findIndex(d => d.id === findedDevice.id)
@@ -198,18 +200,15 @@ watch(selectedClient, async(val) => {
       useTimeoutFn(() => {
         urlSearchParams.activeKeyDeviceDetails && (activeKeyDeviceDetails.value = urlSearchParams.activeKeyDeviceDetails)
         showDeviceDetails.value = !!urlSearchParams.showDeviceDetails
-        const deviceDetailsDateRangeUrl = JSON.parse(decodeURIComponent(urlSearchParams.deviceDetailsDateRange))
-
-        if(deviceDetailsDateRangeUrl?.from && deviceDetailsDateRangeUrl?.to) {
-          deviceDetailsDateRange.value = [dayjs(deviceDetailsDateRangeUrl.from), dayjs(deviceDetailsDateRangeUrl.to)]
-        }
 
         if (gmapRef.value) {
           gmapRef.value.mapOptions.center = { lat: findedDevice.latitude, lng: findedDevice.longitude }
           gmapRef.value.mapOptions.zoom = 21
         }
-      }, 500)
+      }, 200)
     }
+  } else {
+    selectedDevice.value = null
   }
 
   devicesLoading.value = false
@@ -259,7 +258,7 @@ const deleteDevice = (device) => {
   })
 }
 
-const exportDeviceReporting = async() => {
+const exportDeviceReporting = async () => {
   const { data, error } = await apiServices(`/api/rapport/${selectedDeviceForReporting.value}/${deviceReportingDuration.value}`).get().json()
 
   if (data?.value?.url)
@@ -271,7 +270,7 @@ const exportDeviceReporting = async() => {
   visibleDeviceReportingModal.value = false
 }
 
-const addOrUpdateDevice = async(formData: any) => {
+const addOrUpdateDevice = async (formData: any) => {
   if (formData.id !== null) {
     const { error, statusCode } = await apiServices('/api/device').put(formData).json()
     if (statusCode.value !== 200)
@@ -296,23 +295,17 @@ const addOrUpdateDevice = async(formData: any) => {
 
 <template>
   <div class="flex w-full relative !flex-col-reverse !md:flex-row p-0 min-h-55">
-    <a-layout-sider
-      v-model:collapsed="sideCollapsed" class="!md:max-h-full bg-white dark:bg-blue-gray-800"
+    <a-layout-sider v-model:collapsed="sideCollapsed" class="!md:max-h-full bg-white dark:bg-blue-gray-800"
       :class="asideCollapsed ? '!max-h-50px' : '!max-h-1/2'"
       :width="mdAndLarger ? (showDeviceDetails && selectedDevice ? 'calc(60% - 60px)' : 370) : '100%'" :trigger="null"
-      :collapsible="mdAndLarger" :collapsed-width="!mdAndLarger ? '100%' : 80"
-    >
+      :collapsible="!!mdAndLarger" :collapsed-width="!mdAndLarger ? '100%' : 80">
       <div class="p-2 flex relative items-center !h-auto z-10 shadow-sm bg-light-300 dark:bg-blue-gray-900">
         <template v-if="sideCollapsed">
-          <a-button
-            class="flex items-center justify-center mx-auto" type="primary"
-            @click="() => (sideCollapsed = !sideCollapsed)"
-          >
+          <a-button class="flex items-center justify-center mx-auto" type="primary"
+            @click="() => (sideCollapsed = !sideCollapsed)">
             <template #icon>
-              <span
-                :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
-                class="anticon block text-base"
-              />
+              <span :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
+                class="anticon block text-base" />
             </template>
           </a-button>
         </template>
@@ -322,11 +315,9 @@ const addOrUpdateDevice = async(formData: any) => {
               <template #title>
                 <span>{{ t('common.back') }}</span>
               </template>
-              <a-button
-                type="text" class="flex items-center justify-center mr-1" @click="() => {
-                  showDeviceDetails = false
-                }"
-              >
+              <a-button type="text" class="flex items-center justify-center mr-1" @click="() => {
+                showDeviceDetails = false
+              }">
                 <template #icon>
                   <span class="i-carbon-arrow-left anticon block text-blue" />
                 </template>
@@ -337,40 +328,30 @@ const addOrUpdateDevice = async(formData: any) => {
                 <span>{{ selectedDevice?.name }}</span>
               </template>
               <span class="text-md dark:text-light-400">{{ `${selectedDevice?.name}`.slice(0, 20) }}{{
-                `${selectedDevice.name}`.length > 20 ? '...' : null
+              `${selectedDevice.name}`.length > 20 ? '...' : null
               }}</span>
             </a-tooltip>
           </div>
-          <h3
-            v-else-if="!showDeviceDetails"
-            class="text-gray-800 dark:text-light-400 text-base leading-8 my-auto ml-0 mr-auto"
-          >
+          <h3 v-else-if="!showDeviceDetails"
+            class="text-gray-800 dark:text-light-400 text-base leading-8 my-auto ml-0 mr-auto">
             <span v-if="devices.length" class="text-sm leading-15px">{{ devices.length }}/{{ devicesCount }} {{
-              t('common.devices.devices')
+            t('common.devices.devices')
             }}</span>
             <span v-else class="text-sm leading-15px dark:text-light-400">{{ t('common.devices.notFound') }}</span>
           </h3>
           <div class="flex">
-            <a-button
-              v-if="!mdAndLarger" class="flex items-center justify-center flex-grow-0 mr-0" type="primary"
-              @click="toggleAsideCollapsed()"
-            >
+            <a-button v-if="!mdAndLarger" class="flex items-center justify-center flex-grow-0 mr-0" type="primary"
+              @click="toggleAsideCollapsed()">
               <template #icon>
-                <span
-                  :class="asideCollapsed ? 'i-ant-design-arrow-up-outlined' : 'i-ant-design-arrow-down-outlined'"
-                  class="anticon block text-white"
-                />
+                <span :class="asideCollapsed ? 'i-ant-design-arrow-up-outlined' : 'i-ant-design-arrow-down-outlined'"
+                  class="anticon block text-white" />
               </template>
             </a-button>
-            <a-button
-              v-if="mdAndLarger" class="flex items-center justify-center mx-auto flex-grow-0 ml-2"
-              type="primary" @click="() => sideCollapsed = !sideCollapsed"
-            >
+            <a-button v-if="mdAndLarger" class="flex items-center justify-center mx-auto flex-grow-0 ml-2"
+              type="primary" @click="() => sideCollapsed = !sideCollapsed">
               <template #icon>
-                <span
-                  :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
-                  class="anticon block text-base"
-                />
+                <span :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
+                  class="anticon block text-base" />
               </template>
             </a-button>
           </div>
@@ -378,11 +359,9 @@ const addOrUpdateDevice = async(formData: any) => {
       </div>
       <div class="relative z-9 flex flex-nowrap overflow-hidden">
         <div class="block w-full top-0" :style="{ transform: `translateX(-${transitionNumber}%)` }">
-          <DevicesList
-            ref="devicesListRef" v-model:devices="devices" v-model:devices-count="devicesCount"
+          <DevicesList ref="devicesListRef" v-model:devices="devices" v-model:devices-count="devicesCount"
             v-model:devices-loading="devicesLoading" @on-search-device="onSearchDevice" @device-clicked="deviceClicked"
-            @on-load-more="onLoadMore"
-            @show-details="(device) => {
+            @on-load-more="onLoadMore" @show-details="(device) => {
               selectedDevice = device;
               showDeviceDetails = true;
               activeKeyDeviceDetails = 'details';
@@ -399,26 +378,20 @@ const addOrUpdateDevice = async(formData: any) => {
             }" @delete-device="deleteDevice" @device-reporting="(device) => {
               selectedDeviceForReporting = device.id;
               visibleDeviceReportingModal = true;
-            }"
-          />
+            }" />
         </div>
-        <div
-          class="block w-full absolute top-0 h-full"
-          :style="{ transform: `translateX(${-transitionNumber + 100}%)` }"
-        >
+        <div class="block w-full absolute top-0 h-full"
+          :style="{ transform: `translateX(${-transitionNumber + 100}%)` }">
           <div v-if="sideCollapsed" class="h-full">
             <div class="h-full">
               <div
-                class="flex items-center p-2 justify-center relative z-40 items-center justify-center font-semibold bg-light-500/90 backdrop-blur-sm ring-0 ring-slate-900/10 transition-all duration-100 shadow-sm"
-              >
+                class="flex items-center p-2 justify-center relative z-40 items-center justify-center font-semibold bg-light-500/90 backdrop-blur-sm ring-0 ring-slate-900/10 transition-all duration-100 shadow-sm">
                 <a-tooltip>
                   <template #title>
                     <span>{{ t('common.back') }}</span>
                   </template>
-                  <a-button
-                    type="text" class="flex items-center justify-center flex-grow-0 mr-1"
-                    @click="() => { showDeviceDetails = false }"
-                  >
+                  <a-button type="text" class="flex items-center justify-center flex-grow-0 mr-1"
+                    @click="() => { showDeviceDetails = false }">
                     <template #icon>
                       <span class="i-carbon-arrow-left anticon block text-blue" />
                     </template>
@@ -431,10 +404,8 @@ const addOrUpdateDevice = async(formData: any) => {
                     <template #title>
                       <span>{{ t('common.expande') }}</span>
                     </template>
-                    <a-button
-                      type="text" class="flex items-center justify-center mt-5 mx-auto"
-                      @click="sideCollapsed = false"
-                    >
+                    <a-button type="text" class="flex items-center justify-center mt-5 mx-auto"
+                      @click="sideCollapsed = false">
                       <template #icon>
                         <span class="i-ph-arrow-line-right anticon block text-blue" />
                       </template>
@@ -458,15 +429,12 @@ const addOrUpdateDevice = async(formData: any) => {
                   <span class="px-2">History</span>
                 </template>
                 <div class="bg-gray-50 dark:bg-dark-600 h-full">
-                  <DeviceHistory
-                    :data-histories="dataHistories"
-                    @clickPosition="(point) => {
-                      if (gmapRef) {
-                        gmapRef.mapOptions.center = { lat: point.latitude, lng: point.longitude }
-                        gmapRef.mapOptions.zoom = 25
-                      }}
-                    "
-                  />
+                  <DeviceHistory :data-histories="dataHistories" @clickPosition="(point) => {
+                    if (gmapRef) {
+                      gmapRef.mapOptions.center = { lat: point.latitude, lng: point.longitude }
+                      gmapRef.mapOptions.zoom = 25
+                    }}
+                  " />
                 </div>
               </a-tab-pane>
               <a-tab-pane key="stats" class="overflow-auto">
@@ -477,13 +445,9 @@ const addOrUpdateDevice = async(formData: any) => {
               </a-tab-pane>
               <template v-if="activeKeyDeviceDetails !== 'details'" #rightExtra>
                 <div class="bg-white/60 dark:bg-white/5 mr-3px rounded-2px">
-                  <a-range-picker
-                    v-model:value="deviceDetailsDateRange"
-                    :show-time="false"
-                    :disabled-date="(current) => current && current > dayjs().endOf('day')"
-                    format="YYYY-MM-DD"
-                    class="flex-grow max-w-sm mr-0 ml-auto" :bordered="false"
-                  />
+                  <a-range-picker v-model:value="deviceDetailsDateRange"
+                    :disabled-date="(current) => current && current > dayjs().endOf('day')" format="YYYY-MM-DD"
+                    class="flex-grow max-w-sm mr-0 ml-auto" :bordered="false" />
                 </div>
               </template>
             </a-tabs>
@@ -494,37 +458,26 @@ const addOrUpdateDevice = async(formData: any) => {
     <a-layout-content class="!min-h-1/2 !md:h-full !w-full !md:w-auto">
       <div class="overflow-hidden !h-full !w-full relative">
         <div ref="mapToolsContainerRef" class="w-full h-full relative">
-          <GMapDevices
-            ref="gmapRef" :selected-device="selectedDevice"
+          <GMapDevices ref="gmapRef" :selected-device="selectedDevice"
             :devices="devices.filter(d => d.latitude && d.longitude)" class="h-full w-full"
-            :show-devices="showDevicesInMap" :data-histories="dataHistories" @marker-clicked="markerClicked"
-          />
-          <div
-            ref="mapToolsRef"
-            class="m-0 z-10 fixed select-none drop-shadow-sm rounded-sm overflow-hidden m-2"
-            :style="{ top: `${restrictedY}px`, left: `${restrictedX}px`}"
-          >
+            :show-devices="showDevicesInMap" :data-histories="dataHistories" @marker-clicked="markerClicked" />
+          <div ref="mapToolsRef" class="m-0 z-10 fixed select-none drop-shadow-sm rounded-sm overflow-hidden m-2"
+            :style="{ top: `${restrictedY}px`, left: `${restrictedX}px`}">
             <div class="min-w-35 p-3 bg-white flex">
-              <a-button
-                size="small" class="flex items-center justify-center mr-1" type="primary"
-                @click="() => (sideCollapsed = !sideCollapsed)"
-              >
+              <a-button size="small" class="flex items-center justify-center mr-1" type="primary"
+                @click="() => (sideCollapsed = !sideCollapsed)">
                 <template #icon>
-                  <span
-                    :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
-                    class="anticon block text-sm"
-                  />
+                  <span :class="sideCollapsed ? 'i-ant-design-menu-unfold-outlined' : 'i-ant-design-menu-fold-outlined'"
+                    class="anticon block text-sm" />
                 </template>
               </a-button>
-              <a-button
-                size="small" class="flex items-center justify-center mr-1" type="primary" :disabled="!isSupported"
-                @click="() => {
+              <a-button size="small" class="flex items-center justify-center mr-1" type="primary"
+                :disabled="!isSupported" @click="() => {
                   if (gmapRef) {
                     gmapRef.mapOptions.center = { lat: coords.latitude, lng: coords.longitude }
                     gmapRef.mapOptions.zoom = 10
                   }
-                }"
-              >
+                }">
                 <template #icon>
                   <span class="i-carbon-airport-location anticon block text-sm" />
                 </template>
@@ -534,36 +487,28 @@ const addOrUpdateDevice = async(formData: any) => {
                   <span class="i-carbon-area-custom anticon block text-sm" />
                 </template>
               </a-button>
-              <a-button
-                size="small" class="flex items-center justify-center mr-1" type="primary"
-                @click="() => (sideCollapsed = true)"
-              >
+              <a-button size="small" class="flex items-center justify-center mr-1" type="primary"
+                @click="() => (sideCollapsed = true)">
                 <template #icon>
                   <span class="i-carbon-circle-dash anticon block text-sm" />
                 </template>
               </a-button>
-              <a-button
-                size="small" class="flex items-center justify-center mr-1" type="primary"
-                @click="() => { sideCollapsed = true; gmapRef.value?.addRectangle() }"
-              >
+              <a-button size="small" class="flex items-center justify-center mr-1" type="primary"
+                @click="() => { sideCollapsed = true; gmapRef.value?.addRectangle() }">
                 <template #icon>
                   <span class="i-carbon-center-square anticon block text-sm" />
                 </template>
               </a-button>
               <a-button size="small" class="flex items-center justify-center" type="primary" @click="toggleFullScreen">
                 <template #icon>
-                  <span
-                    class="anticon block text-sm"
-                    :class="isFullscreen ? 'i-ant-design-fullscreen-exit-outlined' : 'i-ant-design-fullscreen-outlined'"
-                  />
+                  <span class="anticon block text-sm"
+                    :class="isFullscreen ? 'i-ant-design-fullscreen-exit-outlined' : 'i-ant-design-fullscreen-outlined'" />
                 </template>
               </a-button>
             </div>
-            <span
-              ref="handleMapTools"
+            <span ref="handleMapTools"
               class="absolute z-50 -top-0 -left-0 bg-gray-200 rounded-br-md w-18px h-18px cursor-move p-px select-none"
-              :class="'bg-gray-800 text-light-100'"
-            >
+              :class="'bg-gray-800 text-light-100'">
               <span class="i-carbon-move inline-block text-12px" />
             </span>
           </div>
@@ -571,10 +516,8 @@ const addOrUpdateDevice = async(formData: any) => {
       </div>
     </a-layout-content>
   </div>
-  <DeviceFormModal
-    v-model:visible="visibleDeviceFormModal" :selected-client="selectedClient" :device="selectedDevice"
-    :clients="treeDataClients" :devicetypes="devicetypes" :simcards="simcards" @addOrUpdateDevice="addOrUpdateDevice"
-  />
+  <DeviceFormModal v-model:visible="visibleDeviceFormModal" :selected-client="selectedClient" :device="selectedDevice"
+    :clients="treeDataClients" :devicetypes="devicetypes" :simcards="simcards" @addOrUpdateDevice="addOrUpdateDevice" />
   <a-modal v-model:visible="visibleDeviceReportingModal" title="Device Reporting" @ok="exportDeviceReporting">
     <div class="text-center">
       <a-radio-group v-model:value="deviceReportingDuration" button-style="solid">
