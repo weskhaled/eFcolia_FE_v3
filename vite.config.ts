@@ -15,7 +15,7 @@ import Shiki from 'markdown-it-shiki'
 import Unocss from 'unocss/vite'
 import { AntDesignVueResolver, VueUseComponentsResolver } from 'unplugin-vue-components/resolvers'
 
-const markdownWrapperClasses = 'prose prose-sm m-auto text-left'
+// const markdownWrapperClasses = 'prose prose-sm m-auto text-left'
 
 export default defineConfig({
   resolve: {
@@ -63,28 +63,42 @@ export default defineConfig({
     // https://github.com/antfu/unplugin-vue-components
     Components({
       // relative paths to the directory to search for components
-      dirs: ['src/**/components'],
+      // dirs: ['src/**/components'],
 
       // allow auto load markdown components under `./src/**/components/`
-      extensions: ['vue', 'md', 'svg'],
+      // extensions: ['vue', 'md', 'svg'],
       // search for subdirectories
-      deep: true,
+      // deep: true,
 
       // Generate TypeScript declaration for global components
       dts: './src/components.d.ts',
 
       // allow auto import and register components used in markdown
-      include: [/\.vue$/, /\.md$/],
+      // include: [/\.vue$/, /\.md$/],
 
       // custom resolvers
+      // resolvers: [
+      //   // AntDesignVueResolver({
+      //   //   importStyle: false,
+      //   //   // cjs: process.env.NODE_ENV === 'production',
+      //   //   cjs: false,
+      //   // }),
+
+      //   // VueUseComponentsResolver(),
+      // ],
+      /**
+               * {resolveIcons: true}: resolving problem with icons
+               * {importStyle: false}: do not import css, do it manually for dark mode
+               */
       resolvers: [
         AntDesignVueResolver({
+          cjs: false,
           importStyle: false,
-          // cjs: process.env.NODE_ENV === 'production',
+          resolveIcons: true,
         }),
-        VueUseComponentsResolver(),
       ],
-
+      dirs: ['src/**/components', 'node_modules/@ant-design/icons-vue/es'],
+      extensions: ['vue', 'js'],
       // // Allow subdirectories as namespace prefix for components.
       // directoryAsNamespace: true,
 
@@ -160,20 +174,12 @@ export default defineConfig({
     Inspect(),
   ],
 
-  // https://github.com/vitest-dev/vitest
-  test: {
-    include: ['test/**/*.test.ts'],
-    environment: 'jsdom',
-    deps: {
-      inline: ['@vue', '@vueuse', 'vue-demi'],
-    },
-  },
-
   // https://github.com/antfu/vite-ssg
   ssgOptions: {
-    script: 'async',
+    script: 'sync',
     formatting: 'minify',
     onFinished() { generateSitemap() },
+    format: 'cjs',
   },
 
   ssr: {
@@ -187,7 +193,8 @@ export default defineConfig({
       'vue-router',
       '@vueuse/core',
       '@vueuse/head',
-      'ant-design-vue/es',
+      'ant-design-vue/lib/locale/fr_FR.js',
+      'ant-design-vue/lib/locale/en_US.js',
     ],
     exclude: [
       'vue-demi',
@@ -218,6 +225,7 @@ export default defineConfig({
           '@border-color-base': '#d9d9d9; // major border color',
           '@box-shadow-base': '0 2px 8px rgba(0, 0, 0, 0.15); // major shadow for layers',
         },
+        // additionalData: ``,
         javascriptEnabled: true,
       },
     },

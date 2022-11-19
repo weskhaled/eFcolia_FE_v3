@@ -6,6 +6,9 @@ import enUS from 'ant-design-vue/lib/locale/en_US.js'
 
 import { userLang } from '~/common/stores'
 import { isDark } from '~/common/composables'
+
+const isMounted = useMounted()
+
 const el: Ref<any> = ref(null)
 const color = useCssVar('--color-scheme', el, { initialValue: 'light' })
 dayjs.locale('en')
@@ -47,7 +50,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <a-config-provider :theme="colorState" :locale="locale === 'fr' ? frFR : enUS">
+  <a-config-provider v-if="isMounted"  :theme="colorState" :locale="locale === 'fr' ? frFR : enUS">
     <router-view />
   </a-config-provider>
 </template>
